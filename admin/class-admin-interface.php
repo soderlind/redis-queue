@@ -62,6 +62,7 @@ class Admin_Interface {
 		add_action( 'wp_ajax_redis_queue_create_test_job', array( $this, 'ajax_create_test_job' ) );
 		add_action( 'wp_ajax_redis_queue_diagnostics', array( $this, 'ajax_diagnostics' ) );
 		add_action( 'wp_ajax_redis_queue_debug_test', array( $this, 'ajax_debug_test' ) );
+		add_action( 'wp_ajax_redis_queue_reset_stuck_jobs', array( $this, 'ajax_reset_stuck_jobs' ) );
 	}
 
 	/**
@@ -234,9 +235,13 @@ class Admin_Interface {
 					<button type="button" class="button button-secondary" id="debug-test">
 						<?php esc_html_e( 'Full Debug Test', 'redis-queue-demo' ); ?>
 					</button>
+					<button type="button" class="button button-secondary" id="reset-stuck-jobs">
+						<?php esc_html_e( 'Reset Stuck Jobs', 'redis-queue-demo' ); ?>
+					</button>
 				</div>
 				<div id="diagnostics-result" style="margin-top: 15px;"></div>
 				<div id="debug-test-result" style="margin-top: 15px;"></div>
+				<div id="reset-result" style="margin-top: 15px;"></div>
 			</div>
 
 			<!-- Queue Overview -->
@@ -722,7 +727,7 @@ class Admin_Interface {
 
 			// Use the helper function to process jobs safely if available
 			if ( function_exists( 'redis_queue_process_jobs' ) ) {
-				$results = redis_queue_process_jobs( array( 'default' ), 10 );
+				$results = redis_queue_process_jobs( array( 'default', 'email', 'media', 'api' ), 10 );
 			} else {
 				// Fallback to direct instantiation
 				if ( ! class_exists( 'Sync_Worker' ) ) {
@@ -730,7 +735,7 @@ class Admin_Interface {
 					return;
 				}
 				$sync_worker = new Sync_Worker( $this->queue_manager, $this->job_processor );
-				$results     = $sync_worker->process_jobs( array( 'default' ), 10 );
+				$results     = $sync_worker->process_jobs( array( 'default', 'email', 'media', 'api' ), 10 );
 			}
 
 			// Validate results
@@ -879,28 +884,28 @@ class Admin_Interface {
 		}
 
 		try {
-			$plugin = redis_queue_demo();
+			$plugin        = redis_queue_demo();
 			$debug_results = array();
 
 			// Test 1: Plugin initialization
-			$debug_results['plugin_init'] = array(
+			$debug_results[ 'plugin_init' ] = array(
 				'queue_manager' => is_object( $plugin->queue_manager ),
 				'job_processor' => is_object( $plugin->job_processor ),
 			);
 
 			// Test 2: Redis connection
 			if ( $plugin->queue_manager ) {
-				$debug_results['redis_connection'] = array(
+				$debug_results[ 'redis_connection' ] = array(
 					'connected' => $plugin->queue_manager->is_connected(),
 				);
 
 				// Run diagnostics
-				$diagnostics = $plugin->queue_manager->diagnostic();
-				$debug_results['redis_diagnostics'] = $diagnostics;
+				$diagnostics                        = $plugin->queue_manager->diagnostic();
+				$debug_results[ 'redis_diagnostics' ] = $diagnostics;
 			}
 
 			// Test 3: Create a test job
-			$debug_results['job_creation'] = array();
+			$debug_results[ 'job_creation' ] = array();
 			try {
 				$job_id = $plugin->enqueue_job( 'email', array(
 					'to'      => 'test@example.com',
@@ -909,52 +914,75 @@ class Admin_Interface {
 				) );
 
 				if ( $job_id ) {
-					$debug_results['job_creation']['job_id'] = $job_id;
-					$debug_results['job_creation']['created'] = true;
+					$debug_results[ 'job_creation' ][ 'job_id' ]  = $job_id;
+					$debug_results[ 'job_creation' ][ 'created' ] = true;
 
 					// Check Redis keys after job creation
-					$diagnostics_after = $plugin->queue_manager->diagnostic();
-					$debug_results['job_creation']['redis_keys_after'] = $diagnostics_after['redis_keys'];
+					$diagnostics_after                                 = $plugin->queue_manager->diagnostic();
+					$debug_results[ 'job_creation' ][ 'redis_keys_after' ] = $diagnostics_after[ 'redis_keys' ];
 
-					// Try to dequeue the job
-					$dequeued = $plugin->queue_manager->dequeue( array( 'default' ) );
+					// Try to dequeue the job (check email queue since that's where email jobs go)
+					$dequeued = $plugin->queue_manager->dequeue( array( 'email' ) );
 					if ( $dequeued ) {
-						$debug_results['job_creation']['dequeued'] = true;
-						$debug_results['job_creation']['dequeued_job_id'] = $dequeued['job_id'];
-						$debug_results['job_creation']['dequeued_type'] = $dequeued['job_type'];
-						$debug_results['job_creation']['dequeued_payload'] = $dequeued['payload'];
+						$debug_results[ 'job_creation' ][ 'dequeued' ]         = true;
+						$debug_results[ 'job_creation' ][ 'dequeued_job_id' ]  = $dequeued[ 'job_id' ];
+						$debug_results[ 'job_creation' ][ 'dequeued_type' ]    = $dequeued[ 'job_type' ];
+						$debug_results[ 'job_creation' ][ 'dequeued_payload' ] = $dequeued[ 'payload' ];
 					} else {
-						$debug_results['job_creation']['dequeued'] = false;
-						$debug_results['job_creation']['dequeue_error'] = 'No job found to dequeue';
+						$debug_results[ 'job_creation' ][ 'dequeued' ]      = false;
+						$debug_results[ 'job_creation' ][ 'dequeue_error' ] = 'No job found to dequeue';
 					}
 				} else {
-					$debug_results['job_creation']['created'] = false;
-					$debug_results['job_creation']['error'] = 'Failed to create job';
+					$debug_results[ 'job_creation' ][ 'created' ] = false;
+					$debug_results[ 'job_creation' ][ 'error' ]   = 'Failed to create job';
 				}
 			} catch (Exception $e) {
-				$debug_results['job_creation']['exception'] = $e->getMessage();
+				$debug_results[ 'job_creation' ][ 'exception' ] = $e->getMessage();
 			}
 
 			// Test 4: Check database
 			global $wpdb;
-			$table_name = $wpdb->prefix . 'redis_queue_jobs';
-			$job_count = $wpdb->get_var( "SELECT COUNT(*) FROM {$table_name}" );
-			$debug_results['database'] = array(
+			$table_name                = $wpdb->prefix . 'redis_queue_jobs';
+			$job_count                 = $wpdb->get_var( "SELECT COUNT(*) FROM {$table_name}" );
+			$debug_results[ 'database' ] = array(
 				'table_exists' => $wpdb->get_var( "SHOW TABLES LIKE '{$table_name}'" ) === $table_name,
-				'job_count' => intval( $job_count ),
+				'job_count'    => intval( $job_count ),
 			);
 
 			// Get recent jobs from database
-			$recent_jobs = $wpdb->get_results( 
+			$recent_jobs                              = $wpdb->get_results(
 				"SELECT job_id, job_type, status, created_at FROM {$table_name} ORDER BY created_at DESC LIMIT 5",
 				ARRAY_A
 			);
-			$debug_results['database']['recent_jobs'] = $recent_jobs;
+			$debug_results[ 'database' ][ 'recent_jobs' ] = $recent_jobs;
 
 			wp_send_json_success( $debug_results );
 
 		} catch (Exception $e) {
 			wp_send_json_error( 'Debug test failed: ' . ( $e ? $e->getMessage() : 'Unknown error' ) );
+		}
+	}
+
+	/**
+	 * AJAX handler to reset stuck jobs.
+	 *
+	 * @since 1.0.0
+	 */
+	public function ajax_reset_stuck_jobs() {
+		check_ajax_referer( 'redis_queue_admin', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( -1 );
+		}
+
+		try {
+			$reset_count = $this->queue_manager->reset_stuck_jobs( 30 );
+			wp_send_json_success( array(
+				'message' => sprintf( 'Reset %d stuck jobs back to queued status.', $reset_count ),
+				'count'   => $reset_count,
+			) );
+		} catch (Exception $e) {
+			wp_send_json_error( 'Failed to reset stuck jobs: ' . ( $e ? $e->getMessage() : 'Unknown error' ) );
 		}
 	}
 

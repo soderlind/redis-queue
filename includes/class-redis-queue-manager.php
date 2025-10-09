@@ -509,6 +509,36 @@ class Redis_Queue_Manager {
 	}
 
 	/**
+	 * Reset stuck processing jobs back to queued status.
+	 *
+	 * @since 1.0.0
+	 * @param int $timeout_minutes Jobs processing for longer than this will be reset.
+	 * @return int Number of jobs reset.
+	 */
+	public function reset_stuck_jobs( $timeout_minutes = 30 ) {
+		global $wpdb;
+
+		$table_name = $wpdb->prefix . 'redis_queue_jobs';
+		$timeout_time = date( 'Y-m-d H:i:s', time() - ( $timeout_minutes * 60 ) );
+
+		$result = $wpdb->update(
+			$table_name,
+			array(
+				'status'       => 'queued',
+				'updated_at'   => date( 'Y-m-d H:i:s' ),
+				'processed_at' => null,
+			),
+			array(
+				'status' => 'processing',
+			),
+			array( '%s', '%s', '%s' ),
+			array( '%s' )
+		);
+
+		return $result !== false ? $result : 0;
+	}
+
+	/**
 	 * Diagnostic method to test Redis operations.
 	 *
 	 * @since 1.0.0

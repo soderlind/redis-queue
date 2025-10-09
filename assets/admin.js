@@ -17,6 +17,7 @@
             $(document).on('click', '#refresh-stats', this.refreshStats);
             $(document).on('click', '#run-diagnostics', this.runDiagnostics);
             $(document).on('click', '#debug-test', this.runDebugTest);
+            $(document).on('click', '#reset-stuck-jobs', this.resetStuckJobs);
             
             // Job management events
             $(document).on('click', '.view-job', this.viewJob);
@@ -275,6 +276,42 @@
                 error: function() {
                     $button.prop('disabled', false).text('Full Debug Test');
                     $result.html('<div class="notice notice-error"><p>Failed to run debug test</p></div>');
+                }
+            });
+        },
+
+        resetStuckJobs: function(e) {
+            if (e) e.preventDefault();
+            
+            var $button = $(this);
+            var $result = $('#reset-result');
+            
+            $button.prop('disabled', true).text('Resetting...');
+            $result.html('<div class="notice notice-info"><p>Resetting stuck jobs...</p></div>');
+            
+            $.ajax({
+                url: redisQueueAdmin.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'redis_queue_reset_stuck_jobs',
+                    nonce: redisQueueAdmin.nonce
+                },
+                success: function(response) {
+                    $button.prop('disabled', false).text('Reset Stuck Jobs');
+                    
+                    if (response.success && response.data) {
+                        $result.html('<div class="notice notice-success"><p>' + response.data.message + '</p></div>');
+                        // Refresh stats if available
+                        if (typeof RedisQueueAdmin.refreshStats === 'function') {
+                            RedisQueueAdmin.refreshStats();
+                        }
+                    } else {
+                        $result.html('<div class="notice notice-error"><p>Failed to reset stuck jobs: ' + (response.data || 'Unknown error') + '</p></div>');
+                    }
+                },
+                error: function() {
+                    $button.prop('disabled', false).text('Reset Stuck Jobs');
+                    $result.html('<div class="notice notice-error"><p>Failed to reset stuck jobs</p></div>');
                 }
             });
         },

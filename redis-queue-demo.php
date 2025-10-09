@@ -485,7 +485,7 @@ function redis_queue_enqueue_job( $job_type, $payload = array(), $options = arra
  * @param int   $max_jobs Maximum jobs to process.
  * @return array Processing results.
  */
-function redis_queue_process_jobs( $queues = array( 'default' ), $max_jobs = 10 ) {
+function redis_queue_process_jobs( $queues = array( 'default', 'email', 'media', 'api' ), $max_jobs = 10 ) {
 	$plugin = redis_queue_demo();
 	if ( ! $plugin->queue_manager || ! $plugin->job_processor ) {
 		return array(
