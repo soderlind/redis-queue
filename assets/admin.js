@@ -23,9 +23,6 @@
             // Queue management events
             $(document).on('click', '.clear-queue', this.clearQueue);
             
-            // Test form events
-            $(document).on('submit', '.test-job-form', this.submitTestJob);
-            
             // Settings events
             $(document).on('click', '#test-redis-connection', this.testConnection);
         },
@@ -266,6 +263,12 @@
             var $form = $(this);
             var $submitButton = $form.find('button[type="submit"]');
             var originalText = $submitButton.text();
+            
+            // Prevent double submission
+            if ($submitButton.prop('disabled')) {
+                console.log('Form submission already in progress, ignoring duplicate submit');
+                return;
+            }
             
             $submitButton.prop('disabled', true).text(redisQueueAdmin.strings.processing);
             
