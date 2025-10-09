@@ -1,0 +1,350 @@
+/* Redis Queue Demo Admin Styles */
+
+/* Health Status */
+.redis-queue-health-status {
+	background: #fff;
+	border: 1px solid #ccd0d4;
+	border-radius: 4px;
+	padding: 20px;
+	margin: 20px 0;
+}
+
+.redis-queue-health-status.healthy {
+	border-left: 4px solid #46b450;
+}
+
+.redis-queue-health-status.unhealthy {
+	border-left: 4px solid #dc3232;
+}
+
+.redis-queue-health-status h2 {
+	margin-top: 0;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.status-indicator {
+	width: 12px;
+	height: 12px;
+	border-radius: 50%;
+	display: inline-block;
+}
+
+.healthy .status-indicator {
+	background-color: #46b450;
+}
+
+.unhealthy .status-indicator {
+	background-color: #dc3232;
+}
+
+.health-details {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: 15px;
+	margin-top: 15px;
+}
+
+.health-item {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 10px;
+	background: #f9f9f9;
+	border-radius: 4px;
+}
+
+.health-item .label {
+	font-weight: 600;
+}
+
+.health-item .value {
+	padding: 4px 8px;
+	border-radius: 3px;
+	font-size: 12px;
+	font-weight: 600;
+	text-transform: uppercase;
+}
+
+.health-item .value.connected,
+.health-item .value.ok {
+	background-color: #d4edda;
+	color: #155724;
+}
+
+.health-item .value.disconnected,
+.health-item .value.error {
+	background-color: #f8d7da;
+	color: #721c24;
+}
+
+/* Stats Boxes */
+.redis-queue-stats {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: 20px;
+	margin: 20px 0;
+}
+
+.stat-box {
+	background: #fff;
+	border: 1px solid #ccd0d4;
+	border-radius: 4px;
+	padding: 20px;
+	text-align: center;
+}
+
+.stat-box h3 {
+	margin: 0 0 10px 0;
+	font-size: 14px;
+	color: #646970;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.stat-number {
+	font-size: 36px;
+	font-weight: 700;
+	color: #1d2327;
+	line-height: 1;
+}
+
+/* Controls */
+.redis-queue-controls {
+	background: #fff;
+	border: 1px solid #ccd0d4;
+	border-radius: 4px;
+	padding: 20px;
+	margin: 20px 0;
+}
+
+.redis-queue-controls h2 {
+	margin-top: 0;
+}
+
+.control-buttons {
+	display: flex;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+/* Queue Overview */
+.redis-queue-overview {
+	background: #fff;
+	border: 1px solid #ccd0d4;
+	border-radius: 4px;
+	padding: 20px;
+	margin: 20px 0;
+}
+
+.redis-queue-overview h2 {
+	margin-top: 0;
+}
+
+/* Status Badges */
+.status-badge {
+	padding: 4px 8px;
+	border-radius: 3px;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.status-badge.status-queued {
+	background-color: #e1f5fe;
+	color: #01579b;
+}
+
+.status-badge.status-processing {
+	background-color: #fff3e0;
+	color: #e65100;
+}
+
+.status-badge.status-completed {
+	background-color: #e8f5e8;
+	color: #2e7d32;
+}
+
+.status-badge.status-failed {
+	background-color: #ffebee;
+	color: #c62828;
+}
+
+.status-badge.status-cancelled {
+	background-color: #f5f5f5;
+	color: #616161;
+}
+
+/* Test Forms */
+.redis-queue-test-forms {
+	display: grid;
+	gap: 30px;
+}
+
+.test-form-section {
+	background: #fff;
+	border: 1px solid #ccd0d4;
+	border-radius: 4px;
+	padding: 20px;
+}
+
+.test-form-section h2 {
+	margin-top: 0;
+	border-bottom: 1px solid #eee;
+	padding-bottom: 10px;
+}
+
+.test-job-form .form-table {
+	margin-bottom: 20px;
+}
+
+.test-results {
+	background: #fff;
+	border: 1px solid #ccd0d4;
+	border-radius: 4px;
+	padding: 20px;
+	margin-top: 20px;
+}
+
+.test-results h3 {
+	margin-top: 0;
+}
+
+#test-output {
+	background: #f9f9f9;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	padding: 15px;
+	font-family: 'Courier New', Courier, monospace;
+	font-size: 13px;
+	white-space: pre-wrap;
+	max-height: 300px;
+	overflow-y: auto;
+}
+
+/* Settings */
+.redis-queue-connection-test {
+	background: #fff;
+	border: 1px solid #ccd0d4;
+	border-radius: 4px;
+	padding: 20px;
+	margin-top: 20px;
+}
+
+.redis-queue-connection-test h2 {
+	margin-top: 0;
+}
+
+#connection-test-result {
+	margin-top: 15px;
+	padding: 10px;
+	border-radius: 4px;
+	display: none;
+}
+
+#connection-test-result.success {
+	background-color: #d4edda;
+	color: #155724;
+	border: 1px solid #c3e6cb;
+	display: block;
+}
+
+#connection-test-result.error {
+	background-color: #f8d7da;
+	color: #721c24;
+	border: 1px solid #f5c6cb;
+	display: block;
+}
+
+/* Loading States */
+.loading {
+	opacity: 0.6;
+	pointer-events: none;
+}
+
+.loading::after {
+	content: '';
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 20px;
+	height: 20px;
+	margin: -10px 0 0 -10px;
+	border: 2px solid #f3f3f3;
+	border-top: 2px solid #3498db;
+	border-radius: 50%;
+	animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+	0% {
+		transform: rotate(0deg);
+	}
+
+	100% {
+		transform: rotate(360deg);
+	}
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+	.redis-queue-stats {
+		grid-template-columns: 1fr;
+	}
+
+	.health-details {
+		grid-template-columns: 1fr;
+	}
+
+	.control-buttons {
+		flex-direction: column;
+	}
+
+	.control-buttons .button {
+		width: 100%;
+	}
+}
+
+/* WordPress Admin Compatibility */
+.wrap .redis-queue-health-status,
+.wrap .redis-queue-stats,
+.wrap .redis-queue-controls,
+.wrap .redis-queue-overview,
+.wrap .test-form-section,
+.wrap .test-results,
+.wrap .redis-queue-connection-test {
+	max-width: none;
+}
+
+/* Notice Styles */
+.redis-queue-notice {
+	padding: 10px 15px;
+	margin: 15px 0;
+	border-radius: 4px;
+}
+
+.redis-queue-notice.success {
+	background-color: #d4edda;
+	color: #155724;
+	border: 1px solid #c3e6cb;
+}
+
+.redis-queue-notice.error {
+	background-color: #f8d7da;
+	color: #721c24;
+	border: 1px solid #f5c6cb;
+}
+
+.redis-queue-notice.warning {
+	background-color: #fff3cd;
+	color: #856404;
+	border: 1px solid #ffeaa7;
+}
+
+.redis-queue-notice.info {
+	background-color: #d1ecf1;
+	color: #0c5460;
+	border: 1px solid #bee5eb;
+}
