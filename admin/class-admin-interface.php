@@ -59,6 +59,7 @@ class Admin_Interface {
 		add_action( 'wp_ajax_redis_queue_trigger_worker', array( $this, 'ajax_trigger_worker' ) );
 		add_action( 'wp_ajax_redis_queue_get_stats', array( $this, 'ajax_get_stats' ) );
 		add_action( 'wp_ajax_redis_queue_clear_queue', array( $this, 'ajax_clear_queue' ) );
+		add_action( 'wp_ajax_redis_queue_create_test_job', array( $this, 'ajax_create_test_job' ) );
 	}
 
 	/**
@@ -297,15 +298,20 @@ class Admin_Interface {
 					<select name="status">
 						<option value=""><?php esc_html_e( 'All Statuses', 'redis-queue-demo' ); ?></option>
 						<option value="queued" <?php selected( $status_filter, 'queued' ); ?>>
-							<?php esc_html_e( 'Queued', 'redis-queue-demo' ); ?></option>
+							<?php esc_html_e( 'Queued', 'redis-queue-demo' ); ?>
+						</option>
 						<option value="processing" <?php selected( $status_filter, 'processing' ); ?>>
-							<?php esc_html_e( 'Processing', 'redis-queue-demo' ); ?></option>
+							<?php esc_html_e( 'Processing', 'redis-queue-demo' ); ?>
+						</option>
 						<option value="completed" <?php selected( $status_filter, 'completed' ); ?>>
-							<?php esc_html_e( 'Completed', 'redis-queue-demo' ); ?></option>
+							<?php esc_html_e( 'Completed', 'redis-queue-demo' ); ?>
+						</option>
 						<option value="failed" <?php selected( $status_filter, 'failed' ); ?>>
-							<?php esc_html_e( 'Failed', 'redis-queue-demo' ); ?></option>
+							<?php esc_html_e( 'Failed', 'redis-queue-demo' ); ?>
+						</option>
 						<option value="cancelled" <?php selected( $status_filter, 'cancelled' ); ?>>
-							<?php esc_html_e( 'Cancelled', 'redis-queue-demo' ); ?></option>
+							<?php esc_html_e( 'Cancelled', 'redis-queue-demo' ); ?>
+						</option>
 					</select>
 					<input type="submit" class="button" value="<?php esc_attr_e( 'Filter', 'redis-queue-demo' ); ?>">
 				</form>
@@ -449,7 +455,8 @@ class Admin_Interface {
 								<td>
 									<select id="image-operation" name="operation">
 										<option value="thumbnail">
-											<?php esc_html_e( 'Generate Thumbnails', 'redis-queue-demo' ); ?></option>
+											<?php esc_html_e( 'Generate Thumbnails', 'redis-queue-demo' ); ?>
+										</option>
 										<option value="optimize"><?php esc_html_e( 'Optimize Image', 'redis-queue-demo' ); ?>
 										</option>
 										<option value="watermark"><?php esc_html_e( 'Add Watermark', 'redis-queue-demo' ); ?>
@@ -485,7 +492,8 @@ class Admin_Interface {
 								<td>
 									<select id="api-operation" name="operation">
 										<option value="social_media_post">
-											<?php esc_html_e( 'Social Media Post', 'redis-queue-demo' ); ?></option>
+											<?php esc_html_e( 'Social Media Post', 'redis-queue-demo' ); ?>
+										</option>
 										<option value="crm_sync"><?php esc_html_e( 'CRM Sync', 'redis-queue-demo' ); ?></option>
 										<option value="webhook"><?php esc_html_e( 'Webhook', 'redis-queue-demo' ); ?></option>
 									</select>
@@ -553,7 +561,8 @@ class Admin_Interface {
 							<input type="text" name="redis_host" value="<?php echo esc_attr( $options[ 'redis_host' ] ); ?>"
 								class="regular-text">
 							<p class="description">
-								<?php esc_html_e( 'Redis server hostname or IP address.', 'redis-queue-demo' ); ?></p>
+								<?php esc_html_e( 'Redis server hostname or IP address.', 'redis-queue-demo' ); ?>
+							</p>
 						</td>
 					</tr>
 					<tr>
@@ -591,7 +600,8 @@ class Admin_Interface {
 								value="<?php echo esc_attr( $options[ 'worker_timeout' ] ); ?>" class="small-text" min="5"
 								max="300">
 							<p class="description">
-								<?php esc_html_e( 'Maximum time in seconds for job execution.', 'redis-queue-demo' ); ?></p>
+								<?php esc_html_e( 'Maximum time in seconds for job execution.', 'redis-queue-demo' ); ?>
+							</p>
 						</td>
 					</tr>
 					<tr>
@@ -620,7 +630,8 @@ class Admin_Interface {
 							<input type="number" name="batch_size" value="<?php echo esc_attr( $options[ 'batch_size' ] ); ?>"
 								class="small-text" min="1" max="100">
 							<p class="description">
-								<?php esc_html_e( 'Number of jobs to process in a single batch.', 'redis-queue-demo' ); ?></p>
+								<?php esc_html_e( 'Number of jobs to process in a single batch.', 'redis-queue-demo' ); ?>
+							</p>
 						</td>
 					</tr>
 				</table>
@@ -731,6 +742,42 @@ class Admin_Interface {
 			wp_send_json_success( array( 'message' => 'Queue cleared successfully' ) );
 		} else {
 			wp_send_json_error( 'Failed to clear queue' );
+		}
+	}
+
+	/**
+	 * AJAX handler for creating test jobs.
+	 *
+	 * @since 1.0.0
+	 */
+	public function ajax_create_test_job() {
+		check_ajax_referer( 'redis_queue_admin', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( -1 );
+		}
+
+		$job_type = sanitize_text_field( $_POST['job_type'] ?? '' );
+		$payload  = $_POST['payload'] ?? array();
+
+		// Sanitize payload data
+		$payload = array_map( 'sanitize_text_field', $payload );
+
+		try {
+			// Use the main plugin instance to create the job
+			$plugin = redis_queue_demo();
+			$job_id = $plugin->enqueue_job( $job_type, $payload, array( 'priority' => 10 ) );
+
+			if ( $job_id ) {
+				wp_send_json_success( array(
+					'job_id'  => $job_id,
+					'message' => 'Job created and enqueued successfully.'
+				) );
+			} else {
+				wp_send_json_error( 'Failed to enqueue job.' );
+			}
+		} catch ( Exception $e ) {
+			wp_send_json_error( 'Job creation failed: ' . $e->getMessage() );
 		}
 	}
 

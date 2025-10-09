@@ -320,7 +320,7 @@
                     }
                 },
                 error: function(xhr, textStatus, errorThrown) {
-                    console.log('Job creation error:', {
+                    console.log('REST API job creation failed, trying admin-ajax fallback:', {
                         status: xhr.status,
                         statusText: xhr.statusText,
                         textStatus: textStatus,
@@ -329,13 +329,8 @@
                         responseJSON: xhr.responseJSON
                     });
                     
-                    var errorMsg = 'Failed to create job';
-                    if (xhr.responseJSON && xhr.responseJSON.message) {
-                        errorMsg += ': ' + xhr.responseJSON.message;
-                    } else if (xhr.responseText) {
-                        errorMsg += ' (Status: ' + xhr.status + ')';
-                    }
-                    RedisQueueAdmin.showTestResult(errorMsg, 'error');
+                    // Fallback to admin-ajax.php
+                    RedisQueueAdmin.createJobViaAjax(jobType, formData, $submitButton, originalText);
                 },
                 complete: function() {
                     console.log('Job creation request completed');
@@ -353,6 +348,9 @@
             if ($button.length) {
                 $button.prop('disabled', true).text('Testing...');
             }
+
+            // First test if REST API is accessible
+            console.log('Testing REST API accessibility:', redisQueueAdmin.restUrl);
             
             // Test Redis connection
             $.ajax({
@@ -380,6 +378,43 @@
                     if ($button.length) {
                         $button.prop('disabled', false).text('Test Redis Connection');
                     }
+                }
+            });
+        },
+
+        createJobViaAjax: function(jobType, formData, $submitButton, originalText) {
+            console.log('Creating job via admin-ajax fallback');
+            
+            $.ajax({
+                url: redisQueueAdmin.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'redis_queue_create_test_job',
+                    nonce: redisQueueAdmin.nonce,
+                    job_type: jobType,
+                    payload: formData
+                },
+                success: function(response) {
+                    console.log('Admin-ajax job creation success:', response);
+                    if (response.success) {
+                        RedisQueueAdmin.showTestResult('Job created successfully with ID: ' + response.data.job_id, 'success');
+                        RedisQueueAdmin.refreshStats();
+                    } else {
+                        RedisQueueAdmin.showTestResult('Failed to create job: ' + (response.data || 'Unknown error'), 'error');
+                    }
+                },
+                error: function(xhr, textStatus, errorThrown) {
+                    console.log('Admin-ajax job creation also failed:', {
+                        status: xhr.status,
+                        textStatus: textStatus,
+                        errorThrown: errorThrown,
+                        responseText: xhr.responseText
+                    });
+                    RedisQueueAdmin.showTestResult('Failed to create job via both REST API and admin-ajax', 'error');
+                },
+                complete: function() {
+                    console.log('Admin-ajax job creation request completed');
+                    $submitButton.prop('disabled', false).text(originalText);
                 }
             });
         },
