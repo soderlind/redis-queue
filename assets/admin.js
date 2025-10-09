@@ -288,20 +288,30 @@
             }
             
             // Create job via REST API
+            console.log('Submitting job:', {
+                type: jobType,
+                payload: formData,
+                url: redisQueueAdmin.restUrl + 'jobs',
+                nonce: redisQueueAdmin.restNonce
+            });
+
+            // Use form data instead of JSON to avoid potential content-type issues
+            var requestData = {
+                type: jobType,
+                payload: formData,
+                priority: 10,
+                queue: 'default'
+            };
+
             $.ajax({
                 url: redisQueueAdmin.restUrl + 'jobs',
                 type: 'POST',
-                contentType: 'application/json',
                 beforeSend: function(xhr) {
                     xhr.setRequestHeader('X-WP-Nonce', redisQueueAdmin.restNonce);
                 },
-                data: JSON.stringify({
-                    type: jobType,
-                    payload: formData,
-                    priority: 10,
-                    queue: 'default'
-                }),
+                data: requestData,
                 success: function(response) {
+                    console.log('Job creation success:', response);
                     if (response.success) {
                         RedisQueueAdmin.showTestResult('Job created successfully with ID: ' + response.job_id, 'success');
                         RedisQueueAdmin.refreshStats();
@@ -309,14 +319,26 @@
                         RedisQueueAdmin.showTestResult('Failed to create job: ' + (response.message || 'Unknown error'), 'error');
                     }
                 },
-                error: function(xhr) {
+                error: function(xhr, textStatus, errorThrown) {
+                    console.log('Job creation error:', {
+                        status: xhr.status,
+                        statusText: xhr.statusText,
+                        textStatus: textStatus,
+                        errorThrown: errorThrown,
+                        responseText: xhr.responseText,
+                        responseJSON: xhr.responseJSON
+                    });
+                    
                     var errorMsg = 'Failed to create job';
                     if (xhr.responseJSON && xhr.responseJSON.message) {
                         errorMsg += ': ' + xhr.responseJSON.message;
+                    } else if (xhr.responseText) {
+                        errorMsg += ' (Status: ' + xhr.status + ')';
                     }
                     RedisQueueAdmin.showTestResult(errorMsg, 'error');
                 },
                 complete: function() {
+                    console.log('Job creation request completed');
                     $submitButton.prop('disabled', false).text(originalText);
                 }
             });
