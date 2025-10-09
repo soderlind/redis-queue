@@ -15,6 +15,7 @@
             // Dashboard events
             $(document).on('click', '#trigger-worker', this.triggerWorker);
             $(document).on('click', '#refresh-stats', this.refreshStats);
+            $(document).on('click', '#run-diagnostics', this.runDiagnostics);
             
             // Job management events
             $(document).on('click', '.view-job', this.viewJob);
@@ -114,6 +115,53 @@
                 },
                 error: function() {
                     console.log('Failed to refresh stats');
+                }
+            });
+        },
+
+        runDiagnostics: function(e) {
+            if (e) e.preventDefault();
+            
+            var $button = $(this);
+            var $result = $('#diagnostics-result');
+            
+            $button.prop('disabled', true).text('Running...');
+            $result.html('<div class="notice notice-info"><p>Running diagnostics...</p></div>');
+            
+            $.ajax({
+                url: redisQueueAdmin.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'redis_queue_diagnostics',
+                    nonce: redisQueueAdmin.nonce
+                },
+                success: function(response) {
+                    $button.prop('disabled', false).text('Run Diagnostics');
+                    
+                    if (response.success && response.data) {
+                        var diagnostics = response.data;
+                        var html = '<div class="notice notice-success"><h3>Diagnostic Results:</h3>';
+                        html += '<ul>';
+                        html += '<li><strong>Redis Connected:</strong> ' + (diagnostics.connected ? 'Yes' : 'No') + '</li>';
+                        html += '<li><strong>Test Write:</strong> ' + (diagnostics.test_write ? 'Success' : 'Failed') + '</li>';
+                        html += '<li><strong>Test Read:</strong> ' + (diagnostics.test_read ? 'Success' : 'Failed') + '</li>';
+                        html += '<li><strong>Queue Prefix:</strong> ' + diagnostics.queue_prefix + '</li>';
+                        html += '<li><strong>Redis Keys Found:</strong> ' + (diagnostics.redis_keys ? diagnostics.redis_keys.length : 0) + '</li>';
+                        if (diagnostics.redis_keys && diagnostics.redis_keys.length > 0) {
+                            html += '<li><strong>Keys:</strong> ' + diagnostics.redis_keys.join(', ') + '</li>';
+                        }
+                        if (diagnostics.error) {
+                            html += '<li><strong>Error:</strong> ' + diagnostics.error + '</li>';
+                        }
+                        html += '</ul></div>';
+                        $result.html(html);
+                    } else {
+                        $result.html('<div class="notice notice-error"><p>Diagnostics failed: ' + (response.data || 'Unknown error') + '</p></div>');
+                    }
+                },
+                error: function() {
+                    $button.prop('disabled', false).text('Run Diagnostics');
+                    $result.html('<div class="notice notice-error"><p>Failed to run diagnostics</p></div>');
                 }
             });
         },

@@ -60,6 +60,7 @@ class Admin_Interface {
 		add_action( 'wp_ajax_redis_queue_get_stats', array( $this, 'ajax_get_stats' ) );
 		add_action( 'wp_ajax_redis_queue_clear_queue', array( $this, 'ajax_clear_queue' ) );
 		add_action( 'wp_ajax_redis_queue_create_test_job', array( $this, 'ajax_create_test_job' ) );
+		add_action( 'wp_ajax_redis_queue_diagnostics', array( $this, 'ajax_diagnostics' ) );
 	}
 
 	/**
@@ -226,7 +227,11 @@ class Admin_Interface {
 					<button type="button" class="button" id="refresh-stats">
 						<?php esc_html_e( 'Refresh Stats', 'redis-queue-demo' ); ?>
 					</button>
+					<button type="button" class="button button-secondary" id="run-diagnostics">
+						<?php esc_html_e( 'Run Diagnostics', 'redis-queue-demo' ); ?>
+					</button>
 				</div>
+				<div id="diagnostics-result" style="margin-top: 15px;"></div>
 			</div>
 
 			<!-- Queue Overview -->
@@ -833,6 +838,26 @@ class Admin_Interface {
 			}
 		} catch (Exception $e) {
 			wp_send_json_error( 'Job creation failed: ' . $e->getMessage() );
+		}
+	}
+
+	/**
+	 * AJAX handler for diagnostics.
+	 *
+	 * @since 1.0.0
+	 */
+	public function ajax_diagnostics() {
+		check_ajax_referer( 'redis_queue_admin', 'nonce' );
+
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( -1 );
+		}
+
+		try {
+			$diagnostics = $this->queue_manager->diagnostic();
+			wp_send_json_success( $diagnostics );
+		} catch (Exception $e) {
+			wp_send_json_error( 'Diagnostic failed: ' . ( $e ? $e->getMessage() : 'Unknown error' ) );
 		}
 	}
 

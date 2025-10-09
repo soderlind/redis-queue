@@ -75,9 +75,9 @@ class Sync_Worker {
 	 * @param array               $config        Worker configuration.
 	 */
 	public function __construct( Redis_Queue_Manager $queue_manager, Job_Processor $job_processor, $config = array() ) {
-		$this->queue_manager       = $queue_manager;
-		$this->job_processor       = $job_processor;
-		$this->config              = $this->parse_config( $config );
+		$this->queue_manager         = $queue_manager;
+		$this->job_processor         = $job_processor;
+		$this->config                = $this->parse_config( $config );
 		$this->stats[ 'start_time' ] = microtime( true );
 	}
 
@@ -97,7 +97,7 @@ class Sync_Worker {
 			);
 		}
 
-		$this->state                  = 'working';
+		$this->state                    = 'working';
 		$this->stats[ 'last_activity' ] = microtime( true );
 
 		// Use configured max jobs if not specified.
@@ -209,7 +209,7 @@ class Sync_Worker {
 			);
 		}
 
-		$this->state                  = 'working';
+		$this->state                    = 'working';
 		$this->stats[ 'last_activity' ] = microtime( true );
 
 		try {

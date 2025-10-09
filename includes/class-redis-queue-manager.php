@@ -153,17 +153,19 @@ class Redis_Queue_Manager {
 			$queue_key = $this->get_queue_key( $job->get_queue_name() );
 
 			// Store job metadata in database.
-			$this->store_job_metadata( $job_id, $job, $job_data );
+			if ( ! $this->store_job_metadata( $job_id, $job, $job_data ) ) {
+				return false;
+			}
 
 			if ( $delay && $delay > 0 ) {
 				// Schedule job for later processing.
 				$process_time = time() + $delay;
 				$delayed_key  = $this->queue_prefix . 'delayed';
-				$this->redis->zadd( $delayed_key, $process_time, wp_json_encode( $job_data ) );
+				$this->redis->zadd( $delayed_key, $process_time, json_encode( $job_data ) );
 			} else {
 				// Add to priority queue.
 				$priority = $job->get_priority();
-				$this->redis->zadd( $queue_key, $priority, wp_json_encode( $job_data ) );
+				$this->redis->zadd( $queue_key, $priority, json_encode( $job_data ) );
 			}
 
 			/**
@@ -390,7 +392,7 @@ class Redis_Queue_Manager {
 	 * @return string Job ID.
 	 */
 	private function generate_job_id() {
-		return 'job_' . uniqid() . '_' . wp_rand( 1000, 9999 );
+		return 'job_' . uniqid() . '_' . rand( 1000, 9999 );
 	}
 
 	/**
@@ -410,7 +412,7 @@ class Redis_Queue_Manager {
 			'payload'        => $job->get_payload(),
 			'timeout'        => $job->get_timeout(),
 			'max_attempts'   => $job->get_retry_attempts(),
-			'created_at'     => current_time( 'mysql' ),
+			'created_at'     => date( 'Y-m-d H:i:s' ),
 			'serialized_job' => $job->serialize(),
 		);
 	}
@@ -437,12 +439,12 @@ class Redis_Queue_Manager {
 				'queue_name'   => $job->get_queue_name(),
 				'priority'     => $job->get_priority(),
 				'status'       => 'queued',
-				'payload'      => wp_json_encode( $job->get_payload() ),
+				'payload'      => json_encode( $job->get_payload() ),
 				'attempts'     => 0,
 				'max_attempts' => $job->get_retry_attempts(),
 				'timeout'      => $job->get_timeout(),
-				'created_at'   => current_time( 'mysql' ),
-				'updated_at'   => current_time( 'mysql' ),
+				'created_at'   => date( 'Y-m-d H:i:s' ),
+				'updated_at'   => date( 'Y-m-d H:i:s' ),
 			),
 			array( '%s', '%s', '%s', '%d', '%s', '%s', '%d', '%d', '%d', '%s', '%s' )
 		);
@@ -465,13 +467,13 @@ class Redis_Queue_Manager {
 
 		$update_data = array(
 			'status'     => $status,
-			'updated_at' => current_time( 'mysql' ),
+			'updated_at' => date( 'Y-m-d H:i:s' ),
 		);
 
 		if ( 'processing' === $status ) {
-			$update_data[ 'processed_at' ] = current_time( 'mysql' );
+			$update_data[ 'processed_at' ] = date( 'Y-m-d H:i:s' );
 		} elseif ( 'failed' === $status ) {
-			$update_data[ 'failed_at' ] = current_time( 'mysql' );
+			$update_data[ 'failed_at' ] = date( 'Y-m-d H:i:s' );
 		}
 
 		$result = $wpdb->update(
@@ -497,13 +499,53 @@ class Redis_Queue_Manager {
 	}
 
 	/**
-	 * Get Redis connection for direct access.
+	 * Get Redis connection.
 	 *
 	 * @since 1.0.0
 	 * @return Redis|Predis\Client|null Redis connection.
 	 */
 	public function get_redis_connection() {
 		return $this->redis;
+	}
+
+	/**
+	 * Diagnostic method to test Redis operations.
+	 *
+	 * @since 1.0.0
+	 * @return array Diagnostic results.
+	 */
+	public function diagnostic() {
+		$results = array(
+			'connected'    => $this->is_connected(),
+			'redis_keys'   => array(),
+			'test_write'   => false,
+			'test_read'    => false,
+			'queue_prefix' => $this->queue_prefix,
+		);
+
+		if ( $this->is_connected() ) {
+			try {
+				// Test write
+				$test_key = $this->queue_prefix . 'test';
+				$this->redis->set( $test_key, 'test_value', 10 );
+				$results[ 'test_write' ] = true;
+
+				// Test read
+				$read_value = $this->redis->get( $test_key );
+				$results[ 'test_read' ] = ( $read_value === 'test_value' );
+
+				// Clean up
+				$this->redis->del( $test_key );
+
+				// Get all queue keys
+				$results[ 'redis_keys' ] = $this->redis->keys( $this->queue_prefix . '*' );
+
+			} catch (Exception $e) {
+				$results[ 'error' ] = $e->getMessage();
+			}
+		}
+
+		return $results;
 	}
 
 	/**
