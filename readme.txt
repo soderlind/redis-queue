@@ -1,5 +1,5 @@
 === Redis Queue Demo ===
-Contributors: persoderlind
+Contributors: PerS
 Donate link: https://github.com/soderlind/redis-queue-demo
 Tags: redis, queue, background, jobs, performance
 Requires at least: 6.7

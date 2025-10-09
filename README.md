@@ -81,7 +81,7 @@ composer require predis/predis
 1. **Download/Clone** this plugin to your WordPress plugins directory:
 ```bash
 cd wp-content/plugins/
-git clone https://github.com/persoderlind/redis-queue-demo.git
+git clone https://github.com/soderlind/redis-queue-demo.git
 ```
 
 2. **Activate** the plugin through the WordPress admin interface
@@ -475,7 +475,7 @@ Contributions are welcome! Please:
 
 For support and questions:
 
-- **GitHub Issues**: [Create an issue](https://github.com/persoderlind/redis-queue-demo/issues)
+- **GitHub Issues**: [Create an issue](https://github.com/soderlind/redis-queue-demo/issues)
 - **WordPress Forums**: [Plugin support forum](https://wordpress.org/support/plugin/redis-queue-demo)
 - **Email**: [per@soderlind.no](mailto:per@soderlind.no)
 
@@ -491,4 +491,4 @@ For support and questions:
 
 ---
 
-**Made with ❤️ by [Per Søderlind](https://persoderlind.com)**
+**Made with ❤️ by [Per Søderlind](https://soderlind.com)**
