@@ -280,7 +280,7 @@ class Redis_Queue_Manager {
 				}
 
 				// Add delayed jobs count.
-				$delayed_key      = $this->queue_prefix . 'delayed';
+				$delayed_key        = $this->queue_prefix . 'delayed';
 				$stats[ 'delayed' ] = array(
 					'pending' => $this->redis->zcard( $delayed_key ),
 					'size'    => $this->redis->zcard( $delayed_key ),
@@ -531,7 +531,7 @@ class Redis_Queue_Manager {
 				$results[ 'test_write' ] = true;
 
 				// Test read
-				$read_value = $this->redis->get( $test_key );
+				$read_value             = $this->redis->get( $test_key );
 				$results[ 'test_read' ] = ( $read_value === 'test_value' );
 
 				// Clean up

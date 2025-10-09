@@ -16,6 +16,7 @@
             $(document).on('click', '#trigger-worker', this.triggerWorker);
             $(document).on('click', '#refresh-stats', this.refreshStats);
             $(document).on('click', '#run-diagnostics', this.runDiagnostics);
+            $(document).on('click', '#debug-test', this.runDebugTest);
             
             // Job management events
             $(document).on('click', '.view-job', this.viewJob);
@@ -162,6 +163,118 @@
                 error: function() {
                     $button.prop('disabled', false).text('Run Diagnostics');
                     $result.html('<div class="notice notice-error"><p>Failed to run diagnostics</p></div>');
+                }
+            });
+        },
+
+        runDebugTest: function(e) {
+            if (e) e.preventDefault();
+            
+            var $button = $(this);
+            var $result = $('#debug-test-result');
+            
+            $button.prop('disabled', true).text('Running Debug Test...');
+            $result.html('<div class="notice notice-info"><p>Running comprehensive debug test...</p></div>');
+            
+            $.ajax({
+                url: redisQueueAdmin.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'redis_queue_debug_test',
+                    nonce: redisQueueAdmin.nonce
+                },
+                success: function(response) {
+                    $button.prop('disabled', false).text('Full Debug Test');
+                    
+                    if (response.success && response.data) {
+                        var debug = response.data;
+                        var html = '<div class="notice notice-info"><h3>Full Debug Test Results:</h3>';
+                        
+                        // Plugin Init
+                        html += '<h4>1. Plugin Initialization:</h4><ul>';
+                        html += '<li>Queue Manager: ' + (debug.plugin_init.queue_manager ? 'OK' : 'FAILED') + '</li>';
+                        html += '<li>Job Processor: ' + (debug.plugin_init.job_processor ? 'OK' : 'FAILED') + '</li>';
+                        html += '</ul>';
+                        
+                        // Redis Connection
+                        if (debug.redis_connection) {
+                            html += '<h4>2. Redis Connection:</h4><ul>';
+                            html += '<li>Connected: ' + (debug.redis_connection.connected ? 'YES' : 'NO') + '</li>';
+                            html += '</ul>';
+                        }
+                        
+                        // Redis Diagnostics
+                        if (debug.redis_diagnostics) {
+                            var diag = debug.redis_diagnostics;
+                            html += '<h4>3. Redis Diagnostics:</h4><ul>';
+                            html += '<li>Test Write: ' + (diag.test_write ? 'OK' : 'FAILED') + '</li>';
+                            html += '<li>Test Read: ' + (diag.test_read ? 'OK' : 'FAILED') + '</li>';
+                            html += '<li>Queue Prefix: ' + diag.queue_prefix + '</li>';
+                            html += '<li>Redis Keys Found: ' + (diag.redis_keys ? diag.redis_keys.length : 0) + '</li>';
+                            if (diag.redis_keys && diag.redis_keys.length > 0) {
+                                html += '<li>Keys: ' + diag.redis_keys.join(', ') + '</li>';
+                            }
+                            if (diag.error) {
+                                html += '<li><strong>Error:</strong> ' + diag.error + '</li>';
+                            }
+                            html += '</ul>';
+                        }
+                        
+                        // Job Creation Test
+                        if (debug.job_creation) {
+                            var job = debug.job_creation;
+                            html += '<h4>4. Job Creation Test:</h4><ul>';
+                            if (job.created) {
+                                html += '<li>Job Created: YES (ID: ' + job.job_id + ')</li>';
+                                html += '<li>Redis Keys After Creation: ' + (job.redis_keys_after ? job.redis_keys_after.length : 0) + '</li>';
+                                if (job.redis_keys_after && job.redis_keys_after.length > 0) {
+                                    html += '<li>Keys: ' + job.redis_keys_after.join(', ') + '</li>';
+                                }
+                                html += '<li>Job Dequeued: ' + (job.dequeued ? 'YES' : 'NO') + '</li>';
+                                if (job.dequeued) {
+                                    html += '<li>Dequeued Job ID: ' + job.dequeued_job_id + '</li>';
+                                    html += '<li>Dequeued Job Type: ' + job.dequeued_type + '</li>';
+                                    html += '<li>Payload Keys: ' + Object.keys(job.dequeued_payload || {}).join(', ') + '</li>';
+                                } else if (job.dequeue_error) {
+                                    html += '<li><strong>Dequeue Error:</strong> ' + job.dequeue_error + '</li>';
+                                }
+                            } else {
+                                html += '<li>Job Created: NO</li>';
+                                if (job.error) {
+                                    html += '<li><strong>Error:</strong> ' + job.error + '</li>';
+                                }
+                            }
+                            if (job.exception) {
+                                html += '<li><strong>Exception:</strong> ' + job.exception + '</li>';
+                            }
+                            html += '</ul>';
+                        }
+                        
+                        // Database Check
+                        if (debug.database) {
+                            var db = debug.database;
+                            html += '<h4>5. Database Check:</h4><ul>';
+                            html += '<li>Table Exists: ' + (db.table_exists ? 'YES' : 'NO') + '</li>';
+                            html += '<li>Job Count: ' + db.job_count + '</li>';
+                            if (db.recent_jobs && db.recent_jobs.length > 0) {
+                                html += '<li>Recent Jobs:<ul>';
+                                db.recent_jobs.forEach(function(job) {
+                                    html += '<li>' + job.job_id + ' (' + job.job_type + ') - ' + job.status + ' - ' + job.created_at + '</li>';
+                                });
+                                html += '</ul></li>';
+                            }
+                            html += '</ul>';
+                        }
+                        
+                        html += '</div>';
+                        $result.html(html);
+                    } else {
+                        $result.html('<div class="notice notice-error"><p>Debug test failed: ' + (response.data || 'Unknown error') + '</p></div>');
+                    }
+                },
+                error: function() {
+                    $button.prop('disabled', false).text('Full Debug Test');
+                    $result.html('<div class="notice notice-error"><p>Failed to run debug test</p></div>');
                 }
             });
         },
