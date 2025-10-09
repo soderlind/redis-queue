@@ -698,12 +698,32 @@ class Admin_Interface {
 		}
 
 		try {
-			$sync_worker = new Sync_Worker( $this->queue_manager, $this->job_processor );
-			$results     = $sync_worker->process_jobs( array( 'default' ), 10 );
+			// Check if queue manager and job processor are available
+			if ( ! $this->queue_manager || ! $this->job_processor ) {
+				wp_send_json_error( 'Queue system not initialized' );
+				return;
+			}
+
+			// Check if Redis connection is available
+			if ( ! $this->queue_manager->is_connected() ) {
+				wp_send_json_error( 'Redis connection not available' );
+				return;
+			}
+
+			// Use the helper function to process jobs safely if available
+			if ( function_exists( 'redis_queue_process_jobs' ) ) {
+				$results = redis_queue_process_jobs( array( 'default' ), 10 );
+			} else {
+				// Fallback to direct instantiation
+				$sync_worker = new Sync_Worker( $this->queue_manager, $this->job_processor );
+				$results     = $sync_worker->process_jobs( array( 'default' ), 10 );
+			}
 
 			wp_send_json_success( $results );
 		} catch (Exception $e) {
-			wp_send_json_error( $e->getMessage() );
+			wp_send_json_error( 'Worker error: ' . $e->getMessage() );
+		} catch (Error $e) {
+			wp_send_json_error( 'Fatal error: ' . $e->getMessage() );
 		}
 	}
 
@@ -757,8 +777,8 @@ class Admin_Interface {
 			wp_die( -1 );
 		}
 
-		$job_type = sanitize_text_field( $_POST['job_type'] ?? '' );
-		$payload  = $_POST['payload'] ?? array();
+		$job_type = sanitize_text_field( $_POST[ 'job_type' ] ?? '' );
+		$payload  = $_POST[ 'payload' ] ?? array();
 
 		// Sanitize payload data
 		$payload = array_map( 'sanitize_text_field', $payload );
@@ -771,12 +791,12 @@ class Admin_Interface {
 			if ( $job_id ) {
 				wp_send_json_success( array(
 					'job_id'  => $job_id,
-					'message' => 'Job created and enqueued successfully.'
+					'message' => 'Job created and enqueued successfully.',
 				) );
 			} else {
 				wp_send_json_error( 'Failed to enqueue job.' );
 			}
-		} catch ( Exception $e ) {
+		} catch (Exception $e) {
 			wp_send_json_error( 'Job creation failed: ' . $e->getMessage() );
 		}
 	}
