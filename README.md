@@ -51,8 +51,8 @@ A comprehensive WordPress plugin demonstrating Redis queues for background job p
 
 ### Prerequisites
 
-1. **WordPress**: Version 5.0 or higher
-2. **PHP**: Version 7.4 or higher
+1. **WordPress**: Version 6.7 or higher
+2. **PHP**: Version 8.3 or higher
 3. **Redis Server**: Running Redis instance
 4. **Redis PHP Extension** OR **Predis Library**: One of these for Redis connectivity
 
