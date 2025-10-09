@@ -163,8 +163,17 @@ class Sync_Worker {
 
 			return array(
 				'success' => false,
-				'error'   => $e->getMessage(),
-				'code'    => $e->getCode(),
+				'error'   => $e ? $e->getMessage() : 'Unknown error occurred',
+				'code'    => $e ? $e->getCode() : 0,
+			);
+
+		} catch (Throwable $e) {
+			$this->state = 'error';
+
+			return array(
+				'success' => false,
+				'error'   => $e ? $e->getMessage() : 'Unknown throwable error occurred',
+				'code'    => $e ? $e->getCode() : 0,
 			);
 
 		} finally {

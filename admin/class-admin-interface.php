@@ -715,15 +715,50 @@ class Admin_Interface {
 				$results = redis_queue_process_jobs( array( 'default' ), 10 );
 			} else {
 				// Fallback to direct instantiation
+				if ( ! class_exists( 'Sync_Worker' ) ) {
+					wp_send_json_error( 'Sync_Worker class not available' );
+					return;
+				}
 				$sync_worker = new Sync_Worker( $this->queue_manager, $this->job_processor );
 				$results     = $sync_worker->process_jobs( array( 'default' ), 10 );
 			}
 
+			// Validate results
+			if ( $results === null ) {
+				wp_send_json_error( 'Worker returned null results' );
+				return;
+			}
+
+			if ( ! is_array( $results ) ) {
+				wp_send_json_error( 'Worker returned invalid results format' );
+				return;
+			}
+
 			wp_send_json_success( $results );
 		} catch (Exception $e) {
-			wp_send_json_error( 'Worker error: ' . $e->getMessage() );
+			$error_message = 'Worker error: ';
+			if ( $e && method_exists( $e, 'getMessage' ) ) {
+				$error_message .= $e->getMessage();
+			} else {
+				$error_message .= 'Unknown exception occurred';
+			}
+			wp_send_json_error( $error_message );
 		} catch (Error $e) {
-			wp_send_json_error( 'Fatal error: ' . $e->getMessage() );
+			$error_message = 'Fatal error: ';
+			if ( $e && method_exists( $e, 'getMessage' ) ) {
+				$error_message .= $e->getMessage();
+			} else {
+				$error_message .= 'Unknown fatal error occurred';
+			}
+			wp_send_json_error( $error_message );
+		} catch (Throwable $e) {
+			$error_message = 'Unexpected error: ';
+			if ( $e && method_exists( $e, 'getMessage' ) ) {
+				$error_message .= $e->getMessage();
+			} else {
+				$error_message .= 'Unknown throwable occurred';
+			}
+			wp_send_json_error( $error_message );
 		}
 	}
 
