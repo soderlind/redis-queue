@@ -138,9 +138,11 @@ class Admin_Interface {
 			'redis-queue-admin',
 			'redisQueueAdmin',
 			array(
-				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'nonce'   => wp_create_nonce( 'redis_queue_admin' ),
-				'strings' => array(
+				'ajaxUrl'   => admin_url( 'admin-ajax.php' ),
+				'nonce'     => wp_create_nonce( 'redis_queue_admin' ),
+				'restNonce' => wp_create_nonce( 'wp_rest' ),
+				'restUrl'   => rest_url( 'redis-queue/v1/' ),
+				'strings'   => array(
 					'processing'      => __( 'Processing...', 'redis-queue-demo' ),
 					'success'         => __( 'Success!', 'redis-queue-demo' ),
 					'error'           => __( 'Error occurred', 'redis-queue-demo' ),
@@ -390,6 +392,7 @@ class Admin_Interface {
 			<h1><?php esc_html_e( 'Test Jobs', 'redis-queue-demo' ); ?></h1>
 			<p><?php esc_html_e( 'Create test jobs to verify the queue system is working correctly.', 'redis-queue-demo' ); ?>
 			</p>
+			<?php wp_nonce_field( 'wp_rest', '_wpnonce' ); ?>
 
 			<div class="redis-queue-test-forms">
 				<!-- Email Job Test -->

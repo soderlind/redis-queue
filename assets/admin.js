@@ -151,10 +151,10 @@
             
             // Load job details via REST API
             $.ajax({
-                url: '/wp-json/redis-queue/v1/jobs/' + jobId,
+                url: redisQueueAdmin.restUrl + 'jobs/' + jobId,
                 type: 'GET',
                 beforeSend: function(xhr) {
-                    xhr.setRequestHeader('X-WP-Nonce', $('#_wpnonce').val());
+                    xhr.setRequestHeader('X-WP-Nonce', redisQueueAdmin.restNonce);
                 },
                 success: function(response) {
                     var html = '<table class="job-details-table">';
@@ -200,10 +200,10 @@
             var $row = $link.closest('tr');
             
             $.ajax({
-                url: '/wp-json/redis-queue/v1/jobs/' + jobId,
+                url: redisQueueAdmin.restUrl + 'jobs/' + jobId,
                 type: 'DELETE',
                 beforeSend: function(xhr) {
-                    xhr.setRequestHeader('X-WP-Nonce', $('#_wpnonce').val());
+                    xhr.setRequestHeader('X-WP-Nonce', redisQueueAdmin.restNonce);
                 },
                 success: function(response) {
                     if (response.success) {
@@ -289,11 +289,11 @@
             
             // Create job via REST API
             $.ajax({
-                url: '/wp-json/redis-queue/v1/jobs',
+                url: redisQueueAdmin.restUrl + 'jobs',
                 type: 'POST',
                 contentType: 'application/json',
                 beforeSend: function(xhr) {
-                    xhr.setRequestHeader('X-WP-Nonce', $('#_wpnonce').val());
+                    xhr.setRequestHeader('X-WP-Nonce', redisQueueAdmin.restNonce);
                 },
                 data: JSON.stringify({
                     type: jobType,
@@ -334,10 +334,10 @@
             
             // Test Redis connection
             $.ajax({
-                url: '/wp-json/redis-queue/v1/health',
+                url: redisQueueAdmin.restUrl + 'health',
                 type: 'GET',
                 beforeSend: function(xhr) {
-                    xhr.setRequestHeader('X-WP-Nonce', $('#_wpnonce').val());
+                    xhr.setRequestHeader('X-WP-Nonce', redisQueueAdmin.restNonce);
                 },
                 success: function(response) {
                     if (response.success && response.data.redis_connected) {
