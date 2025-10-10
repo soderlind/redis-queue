@@ -63,11 +63,10 @@ Redis Queue Demo is a comprehensive WordPress plugin that demonstrates how to im
 **Redis Setup:**
 
 For local development with Homebrew:
-```
-brew install redis
-brew services start redis
-```
-
+`
+    brew install redis
+    brew services start redis
+`
 For production environments, configure Redis connection settings in the plugin admin panel.
 
 == Frequently Asked Questions ==
