@@ -53,6 +53,30 @@ class REST_Controller {
 	private $sync_worker;
 
 	/**
+	 * Last auth method used (cap|token|none) for current request lifecycle.
+	 * @var string
+	 */
+	private $last_auth_method = 'none';
+
+	/**
+	 * Whether token scope permitted this request (for logging context).
+	 * @var bool
+	 */
+	private $last_scope_allowed = false;
+
+	/**
+	 * Whether rate limit was enforced (blocked) on token request.
+	 * @var bool
+	 */
+	private $last_rate_limited = false;
+
+	/**
+	 * Token value used (never persisted beyond request; used only for rate limiting and logging) – not stored if logging disabled.
+	 * @var string
+	 */
+	private $last_token_used = '';
+
+	/**
 	 * Constructor.
 	 *
 	 * @since 1.0.0
@@ -63,6 +87,11 @@ class REST_Controller {
 		$this->queue_manager = $queue_manager;
 		$this->job_processor = $job_processor;
 		$this->sync_worker   = new Sync_Worker( $queue_manager, $job_processor );
+
+		// Attach logging filters lazily after WordPress REST server is initialized.
+		add_filter( 'rest_post_dispatch', function ( $response, $server, $request ) {
+			return $this->maybe_log_request( $response, $request );
+		}, 10, 3 );
 	}
 
 	/**
@@ -476,7 +505,7 @@ class REST_Controller {
 			try {
 				$redis = $this->queue_manager->get_redis_connection();
 				if ( $redis && method_exists( $redis, 'info' ) ) {
-					$redis_info           = $redis->info();
+					$redis_info             = $redis->info();
 					$health[ 'redis_info' ] = array(
 						'redis_version'     => $redis_info[ 'redis_version' ] ?? 'unknown',
 						'used_memory'       => $redis_info[ 'used_memory_human' ] ?? 'unknown',
@@ -547,15 +576,166 @@ class REST_Controller {
 	 * @return bool|WP_Error True if user has permission, WP_Error otherwise.
 	 */
 	public function check_permissions( $request ) {
-		if ( ! current_user_can( 'manage_options' ) ) {
-			return new WP_Error(
-				'rest_forbidden',
-				__( 'You do not have permission to access this endpoint.', 'redis-queue-demo' ),
-				array( 'status' => 403 )
-			);
+		// 1. Capability check first (logged-in admin passes immediately).
+		if ( current_user_can( 'manage_options' ) ) {
+			$this->last_auth_method = 'cap';
+			return true;
 		}
 
+		// 2. Token authentication fallback with scope + rate limiting.
+		$settings           = get_option( 'redis_queue_settings', array() );
+		$api_token          = isset( $settings[ 'api_token' ] ) ? $settings[ 'api_token' ] : '';
+		$scope              = isset( $settings[ 'api_token_scope' ] ) ? $settings[ 'api_token_scope' ] : 'worker';
+		$rate_limit_enabled = true; // Always enforce if token used; thresholds read below.
+		$rate_per_min       = isset( $settings[ 'rate_limit_per_minute' ] ) ? (int) $settings[ 'rate_limit_per_minute' ] : 60;
+		$rate_per_min       = $rate_per_min > 0 ? $rate_per_min : 60;
+
+		if ( ! empty( $api_token ) ) {
+			$provided    = '';
+			$auth_header = $request->get_header( 'authorization' );
+			if ( $auth_header && stripos( $auth_header, 'bearer ' ) === 0 ) {
+				$provided = trim( substr( $auth_header, 7 ) );
+			}
+			if ( empty( $provided ) ) {
+				$provided = $request->get_header( 'x-redis-queue-token' );
+			}
+
+			if ( ! empty( $provided ) && hash_equals( $api_token, $provided ) ) {
+				$this->last_auth_method = 'token';
+				$this->last_token_used  = $provided; // kept only in-memory for this request.
+
+				// Enforce scope: default 'worker' only allows trigger endpoint unless scope set to full.
+				$route   = $request->get_route(); // e.g. /redis-queue/v1/workers/trigger
+				$allowed = true;
+				if ( 'full' !== $scope ) {
+					$allowed_routes = apply_filters( 'redis_queue_demo_token_allowed_routes', array( '/redis-queue/v1/workers/trigger' ), $scope );
+					$allowed        = in_array( $route, $allowed_routes, true );
+				}
+				$allowed                  = apply_filters( 'redis_queue_demo_token_scope_allow', $allowed, $scope, $request );
+				$this->last_scope_allowed = $allowed;
+				if ( ! $allowed ) {
+					return new WP_Error( 'rest_forbidden_scope', __( 'Token scope does not permit this endpoint.', 'redis-queue-demo' ), array( 'status' => 403 ) );
+				}
+
+				// Rate limiting (only token requests).
+				if ( $rate_limit_enabled && $rate_per_min > 0 ) {
+					$limit_ok = $this->enforce_rate_limit( $provided, $rate_per_min );
+					if ( ! $limit_ok ) {
+						$this->last_rate_limited = true;
+						return new WP_Error( 'rate_limited', __( 'Rate limit exceeded. Try again later.', 'redis-queue-demo' ), array( 'status' => 429 ) );
+					}
+				}
+
+				return true;
+			}
+		}
+
+		$this->last_auth_method = 'none';
+		return new WP_Error( 'rest_forbidden', __( 'You do not have permission to access this endpoint.', 'redis-queue-demo' ), array( 'status' => 403 ) );
+	}
+
+	/**
+	 * Enforce minute-based rate limit for a token.
+	 * Uses transients for lightweight storage.
+	 *
+	 * @param string $token       Token value.
+	 * @param int    $per_minute  Allowed requests per minute.
+	 * @return bool True if within limit.
+	 */
+	private function enforce_rate_limit( $token, $per_minute ) {
+		$key_root = 'redis_queue_demo_rate_' . substr( hash( 'sha256', $token ), 0, 24 );
+		$minute   = gmdate( 'YmdHi' );
+		$key      = $key_root . '_' . $minute;
+		$count    = (int) get_transient( $key );
+		$count++;
+		if ( $count === 1 ) {
+			// Set transient for remainder of current minute (~60 seconds) to ensure window alignment.
+			$ttl = 60 - (int) gmdate( 's' );
+			set_transient( $key, 1, $ttl );
+			return true;
+		}
+		if ( $count > $per_minute ) {
+			return false;
+		}
+		// Increment persisted count.
+		$ttl = 60 - (int) gmdate( 's' );
+		set_transient( $key, $count, $ttl );
 		return true;
+	}
+
+	/**
+	 * Maybe log request if logging is enabled in settings.
+	 * @param WP_REST_Response|mixed $response Response.
+	 * @param WP_REST_Request        $request  Request.
+	 * @return WP_REST_Response|mixed Original response.
+	 */
+	private function maybe_log_request( $response, $request ) {
+		if ( ! $request instanceof WP_REST_Request ) {
+			return $response;
+		}
+		$route = $request->get_route();
+		if ( 0 !== strpos( $route, '/' . self::NAMESPACE) ) {
+			return $response; // Not our namespace.
+		}
+		$settings = get_option( 'redis_queue_settings', array() );
+		if ( empty( $settings[ 'enable_request_logging' ] ) ) {
+			return $response;
+		}
+		$rotate_kb   = isset( $settings[ 'log_rotate_size_kb' ] ) ? (int) $settings[ 'log_rotate_size_kb' ] : 256;
+		$max_files   = isset( $settings[ 'log_max_files' ] ) ? (int) $settings[ 'log_max_files' ] : 5;
+		$rotate_kb   = $rotate_kb > 8 ? $rotate_kb : 256;
+		$max_files   = $max_files > 0 ? $max_files : 5;
+		$status_code = ( $response instanceof WP_REST_Response ) ? $response->get_status() : 0;
+
+		$line = wp_json_encode( array(
+			'ts'           => gmdate( 'c' ),
+			'method'       => $request->get_method(),
+			'route'        => $route,
+			'status'       => $status_code,
+			'auth'         => $this->last_auth_method,
+			'scope_ok'     => $this->last_scope_allowed,
+			'rate_limited' => $this->last_rate_limited,
+			'user_id'      => get_current_user_id(),
+			'ip'           => isset( $_SERVER[ 'REMOTE_ADDR' ] ) ? sanitize_text_field( $_SERVER[ 'REMOTE_ADDR' ] ) : '',
+		) );
+		$this->append_log_line( $line, $rotate_kb, $max_files );
+		return $response;
+	}
+
+	/**
+	 * Append a line to the request log with rotation.
+	 *
+	 * @param string $line       JSON log line.
+	 * @param int    $rotate_kb  Rotation threshold (KB).
+	 * @param int    $max_files  Max rotated files to keep.
+	 */
+	private function append_log_line( $line, $rotate_kb, $max_files ) {
+		$upload_dir = wp_upload_dir();
+		$dir        = trailingslashit( $upload_dir[ 'basedir' ] ) . 'redis-queue-demo-logs';
+		if ( ! file_exists( $dir ) ) {
+			wp_mkdir_p( $dir );
+		}
+		$log_file     = trailingslashit( $dir ) . 'requests.log';
+		$rotate_bytes = $rotate_kb * 1024;
+		if ( file_exists( $log_file ) && filesize( $log_file ) > $rotate_bytes ) {
+			$rotated = trailingslashit( $dir ) . 'requests-' . gmdate( 'Ymd-His' ) . '.log';
+			@rename( $log_file, $rotated );
+			// Cleanup old rotated files.
+			$files = glob( trailingslashit( $dir ) . 'requests-*.log' );
+			if ( is_array( $files ) && count( $files ) > $max_files ) {
+				sort( $files ); // Oldest first (timestamp in name ensures lexical order).
+				$excess = array_slice( $files, 0, count( $files ) - $max_files );
+				foreach ( $excess as $old ) {
+					@unlink( $old );
+				}
+			}
+		}
+		// Append line.
+		$fh = @fopen( $log_file, 'ab' );
+		if ( $fh ) {
+			fwrite( $fh, $line . PHP_EOL );
+			fclose( $fh );
+		}
 	}
 
 	/**

@@ -102,7 +102,8 @@ class Job_Processor {
 			if ( $result->is_successful() ) {
 				$this->handle_successful_job( $job_id, $result );
 			} else {
-				$this->handle_failed_job( $job_id, $job, $result, 1 );
+				// Pass null for exception because the job returned a failure result without throwing.
+				$this->handle_failed_job( $job_id, $job, $result, 1, null );
 			}
 
 			/**

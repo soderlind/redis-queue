@@ -3,7 +3,7 @@
  * Plugin Name: Redis Queue Demo
  * Plugin URI: https://github.com/soderlind/redis-queue-demo
  * Description: A comprehensive WordPress plugin demonstrating Redis queues for background job processing. Includes email operations, image processing, API integrations, and more.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: Per Soderlind
  * Author URI: https://soderlind.no
  * License: GPL v2 or later
@@ -24,7 +24,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Define plugin constants.
-define( 'REDIS_QUEUE_DEMO_VERSION', '1.0.0' );
+define( 'REDIS_QUEUE_DEMO_VERSION', '1.0.1' );
 define( 'REDIS_QUEUE_DEMO_PLUGIN_FILE', __FILE__ );
 define( 'REDIS_QUEUE_DEMO_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'REDIS_QUEUE_DEMO_PLUGIN_URL', plugin_dir_url( __FILE__ ) );

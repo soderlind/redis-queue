@@ -18,6 +18,8 @@
             $(document).on('click', '#run-diagnostics', this.runDiagnostics);
             $(document).on('click', '#debug-test', this.runDebugTest);
             $(document).on('click', '#reset-stuck-jobs', this.resetStuckJobs);
+            // Purge events
+            $(document).on('click', '.purge-buttons button', this.purgeJobs);
             
             // Job management events
             $(document).on('click', '.view-job', this.viewJob);
@@ -191,81 +193,44 @@
                         var debug = response.data;
                         var html = '<div class="notice notice-info"><h3>Full Debug Test Results:</h3>';
                         
-                        // Plugin Init
-                        html += '<h4>1. Plugin Initialization:</h4><ul>';
-                        html += '<li>Queue Manager: ' + (debug.plugin_init.queue_manager ? 'OK' : 'FAILED') + '</li>';
-                        html += '<li>Job Processor: ' + (debug.plugin_init.job_processor ? 'OK' : 'FAILED') + '</li>';
-                        html += '</ul>';
-                        
-                        // Redis Connection
-                        if (debug.redis_connection) {
-                            html += '<h4>2. Redis Connection:</h4><ul>';
-                            html += '<li>Connected: ' + (debug.redis_connection.connected ? 'YES' : 'NO') + '</li>';
-                            html += '</ul>';
-                        }
-                        
-                        // Redis Diagnostics
-                        if (debug.redis_diagnostics) {
-                            var diag = debug.redis_diagnostics;
-                            html += '<h4>3. Redis Diagnostics:</h4><ul>';
-                            html += '<li>Test Write: ' + (diag.test_write ? 'OK' : 'FAILED') + '</li>';
-                            html += '<li>Test Read: ' + (diag.test_read ? 'OK' : 'FAILED') + '</li>';
-                            html += '<li>Queue Prefix: ' + diag.queue_prefix + '</li>';
-                            html += '<li>Redis Keys Found: ' + (diag.redis_keys ? diag.redis_keys.length : 0) + '</li>';
-                            if (diag.redis_keys && diag.redis_keys.length > 0) {
-                                html += '<li>Keys: ' + diag.redis_keys.join(', ') + '</li>';
-                            }
-                            if (diag.error) {
-                                html += '<li><strong>Error:</strong> ' + diag.error + '</li>';
-                            }
-                            html += '</ul>';
-                        }
-                        
-                        // Job Creation Test
-                        if (debug.job_creation) {
-                            var job = debug.job_creation;
-                            html += '<h4>4. Job Creation Test:</h4><ul>';
-                            if (job.created) {
-                                html += '<li>Job Created: YES (ID: ' + job.job_id + ')</li>';
-                                html += '<li>Redis Keys After Creation: ' + (job.redis_keys_after ? job.redis_keys_after.length : 0) + '</li>';
-                                if (job.redis_keys_after && job.redis_keys_after.length > 0) {
-                                    html += '<li>Keys: ' + job.redis_keys_after.join(', ') + '</li>';
+                        // Display all debug sections dynamically
+                        for (var section in debug) {
+                            if (debug.hasOwnProperty(section)) {
+                                html += '<h4>' + section + ':</h4><ul>';
+                                var sectionData = debug[section];
+                                
+                                if (typeof sectionData === 'object' && sectionData !== null) {
+                                    if (Array.isArray(sectionData)) {
+                                        // Handle arrays (like Recent Jobs)
+                                        for (var i = 0; i < sectionData.length; i++) {
+                                            html += '<li>' + sectionData[i] + '</li>';
+                                        }
+                                    } else {
+                                        // Handle objects
+                                        for (var key in sectionData) {
+                                            if (sectionData.hasOwnProperty(key)) {
+                                                var value = sectionData[key];
+                                                if (Array.isArray(value)) {
+                                                    html += '<li><strong>' + key + ':</strong></li>';
+                                                    html += '<ul>';
+                                                    for (var j = 0; j < value.length; j++) {
+                                                        html += '<li>' + value[j] + '</li>';
+                                                    }
+                                                    html += '</ul>';
+                                                } else {
+                                                    html += '<li><strong>' + key + ':</strong> ' + value + '</li>';
+                                                }
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    html += '<li>' + sectionData + '</li>';
                                 }
-                                html += '<li>Job Dequeued: ' + (job.dequeued ? 'YES' : 'NO') + '</li>';
-                                if (job.dequeued) {
-                                    html += '<li>Dequeued Job ID: ' + job.dequeued_job_id + '</li>';
-                                    html += '<li>Dequeued Job Type: ' + job.dequeued_type + '</li>';
-                                    html += '<li>Payload Keys: ' + Object.keys(job.dequeued_payload || {}).join(', ') + '</li>';
-                                } else if (job.dequeue_error) {
-                                    html += '<li><strong>Dequeue Error:</strong> ' + job.dequeue_error + '</li>';
-                                }
-                            } else {
-                                html += '<li>Job Created: NO</li>';
-                                if (job.error) {
-                                    html += '<li><strong>Error:</strong> ' + job.error + '</li>';
-                                }
+                                html += '</ul>';
                             }
-                            if (job.exception) {
-                                html += '<li><strong>Exception:</strong> ' + job.exception + '</li>';
-                            }
-                            html += '</ul>';
                         }
-                        
-                        // Database Check
-                        if (debug.database) {
-                            var db = debug.database;
-                            html += '<h4>5. Database Check:</h4><ul>';
-                            html += '<li>Table Exists: ' + (db.table_exists ? 'YES' : 'NO') + '</li>';
-                            html += '<li>Job Count: ' + db.job_count + '</li>';
-                            if (db.recent_jobs && db.recent_jobs.length > 0) {
-                                html += '<li>Recent Jobs:<ul>';
-                                db.recent_jobs.forEach(function(job) {
-                                    html += '<li>' + job.job_id + ' (' + job.job_type + ') - ' + job.status + ' - ' + job.created_at + '</li>';
-                                });
-                                html += '</ul></li>';
-                            }
-                            html += '</ul>';
-                        }
+
+
                         
                         html += '</div>';
                         $result.html(html);
@@ -312,6 +277,55 @@
                 error: function() {
                     $button.prop('disabled', false).text('Reset Stuck Jobs');
                     $result.html('<div class="notice notice-error"><p>Failed to reset stuck jobs</p></div>');
+                }
+            });
+        },
+
+        purgeJobs: function(e) {
+            e.preventDefault();
+            var $button = $(this);
+            var scope = $button.data('purge-scope');
+            var $result = $('#purge-result');
+
+            if (!scope) return;
+
+            var confirmMsg = 'Are you sure you want to purge ' + scope + ' jobs?';
+            if (scope === 'all') {
+                confirmMsg = 'DANGER: This will delete ALL jobs. Continue?';
+            } else if (scope === 'older') {
+                confirmMsg = 'Purge jobs older than 7 days?';
+            }
+
+            if (!confirm(confirmMsg)) return;
+
+            var originalText = $button.text();
+            $button.prop('disabled', true).text(redisQueueAdmin.strings.processing);
+            $result.html('<div class="notice notice-info"><p>Purging jobs...</p></div>');
+
+            $.ajax({
+                url: redisQueueAdmin.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'redis_queue_purge_jobs',
+                    nonce: redisQueueAdmin.nonce,
+                    scope: scope,
+                    days: parseInt($('#purge-days').val(), 10) || 7
+                },
+                success: function(response) {
+                    if (response.success && response.data) {
+                        $result.html('<div class="notice notice-success"><p>' + response.data.message + '</p></div>');
+                        if (typeof RedisQueueAdmin.refreshStats === 'function') {
+                            RedisQueueAdmin.refreshStats();
+                        }
+                    } else {
+                        $result.html('<div class="notice notice-error"><p>Purge failed: ' + (response.data || 'Unknown error') + '</p></div>');
+                    }
+                },
+                error: function() {
+                    $result.html('<div class="notice notice-error"><p>Purge request failed.</p></div>');
+                },
+                complete: function() {
+                    $button.prop('disabled', false).text(originalText);
                 }
             });
         },

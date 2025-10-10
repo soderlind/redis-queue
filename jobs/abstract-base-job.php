@@ -145,9 +145,12 @@ abstract class Abstract_Base_Job implements Queue_Job {
 	/**
 	 * Handle job failure.
 	 *
+	 * NOTE: $exception may be null when the job itself returned a failure result
+	 * without throwing (e.g., wp_mail returned false). Code must be null-safe.
+	 *
 	 * @since 1.0.0
-	 * @param Exception $exception The exception that caused the failure.
-	 * @param int       $attempt   The current attempt number.
+	 * @param Exception|null $exception The exception that caused the failure (if any).
+	 * @param int            $attempt   The current attempt number.
 	 * @return void
 	 */
 	public function handle_failure( $exception, $attempt ) {
@@ -163,12 +166,13 @@ abstract class Abstract_Base_Job implements Queue_Job {
 
 		// Log the failure.
 		if ( redis_queue_demo()->get_option( 'enable_logging', true ) ) {
+			$message = $exception instanceof Exception ? $exception->getMessage() : 'No exception object (job returned failure result)';
 			error_log(
 				sprintf(
 					'Redis Queue Demo: Job %s failed on attempt %d - %s',
 					$this->get_job_type(),
 					$attempt,
-					$exception->getMessage()
+					$message
 				)
 			);
 		}
@@ -178,14 +182,19 @@ abstract class Abstract_Base_Job implements Queue_Job {
 	 * Determine if the job should be retried after failure.
 	 *
 	 * @since 1.0.0
-	 * @param Exception $exception The exception that caused the failure.
-	 * @param int       $attempt   The current attempt number.
+	 * @param Exception|null $exception The exception that caused the failure (if any).
+	 * @param int            $attempt   The current attempt number (1-based).
 	 * @return bool Whether to retry the job.
 	 */
 	public function should_retry( $exception, $attempt ) {
 		// Don't retry if we've reached max attempts.
 		if ( $attempt >= $this->retry_attempts ) {
 			return false;
+		}
+
+		// If there is no exception object (logical failure), treat as retryable by default.
+		if ( ! ( $exception instanceof Exception ) ) {
+			return apply_filters( 'redis_queue_demo_should_retry_job', true, $this, null, $attempt );
 		}
 
 		// Don't retry for certain types of exceptions.
@@ -206,7 +215,7 @@ abstract class Abstract_Base_Job implements Queue_Job {
 		 * @since 1.0.0
 		 * @param bool                $should_retry Whether to retry.
 		 * @param Abstract_Base_Job   $job          Job instance.
-		 * @param Exception           $exception    Exception that caused the failure.
+		 * @param Exception|null      $exception    Exception that caused the failure (if any).
 		 * @param int                 $attempt      Attempt number.
 		 */
 		return apply_filters( 'redis_queue_demo_should_retry_job', true, $this, $exception, $attempt );

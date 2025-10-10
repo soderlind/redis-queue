@@ -3,24 +3,27 @@ Contributors: PerS
 Donate link: https://github.com/soderlind/redis-queue-demo
 Tags: redis, queue, background, jobs, performance
 Requires at least: 6.7
-Tested up to: 6.7
+Tested up to: 6.8
 Requires PHP: 8.3
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Demonstrates Redis queue implementation for WordPress background job processing with REST API worker management.
+Redis-backed background job processing for WordPress: priority, delay, retries, REST API, token auth (scopes + rate limiting), logging, extensibility.
 
 == Description ==
 
 Redis Queue Demo is a comprehensive WordPress plugin that demonstrates how to implement enterprise-grade background job processing using Redis queues. This plugin showcases effective techniques for handling time-consuming, resource-intensive, or critical tasks asynchronously, improving user experience and site performance.
 
-**Key Features:**
+**Key Features (1.0.1):**
 
 * **Background Job Processing**: Handle time-consuming tasks without blocking user interactions
-* **REST API Integration**: Complete REST API for worker management and job creation
+* **REST API Integration**: Complete REST API for worker management, job creation, stats & health
 * **Multiple Job Types**: Email processing, image optimization, and API synchronization examples
-* **Admin Dashboard**: Comprehensive admin interface for monitoring and management
+* **Admin Dashboard**: Comprehensive admin interface for monitoring, purge tools, debug test
+* **Token Authentication**: Optional API token with scopes (worker/full)
+* **Rate Limiting**: Per-token requests/minute enforcement
+* **Request Logging**: JSON lines logging with rotation & retention settings
 * **Real-time Monitoring**: Live job status tracking and performance metrics
 * **WordPress Integration**: Follows WordPress coding standards and development guidelines
 
@@ -37,7 +40,8 @@ Redis Queue Demo is a comprehensive WordPress plugin that demonstrates how to im
 
 * Redis PHP extension and Predis library support
 * Custom MySQL tables for job metadata
-* Comprehensive error handling and logging
+* Comprehensive error handling, retry backoff, and extensible logging
+* Token scope filtering & rate limiting hooks
 * Security with WordPress nonces and capability checks
 * Extensible architecture for custom job types
 
@@ -98,6 +102,16 @@ The plugin includes fallback mechanisms and graceful error handling. Jobs will f
 
 == Changelog ==
 
+= 1.0.1 =
+* Added documentation index & extensibility guide (`docs/README.md`, `extending-jobs.md`, `usage.md`)
+* Added token scopes (worker/full) with filters to customize allowed routes
+* Implemented per-token rate limiting (configurable)
+* Added structured request logging with rotation & retention
+* Refactored primary `README.md` to concise overview with links
+* Improved null-safe failure handling and retry decision logic
+* Added filter examples in REST API docs
+* Internal adjustments for future scaling docs
+
 = 1.0.0 =
 * Initial release
 * Complete Redis queue implementation
@@ -109,8 +123,11 @@ The plugin includes fallback mechanisms and graceful error handling. Jobs will f
 
 == Upgrade Notice ==
 
+= 1.0.1 =
+Documentation + security enhancements (token scopes, rate limiting, logging). No database changes.
+
 = 1.0.0 =
-Initial release of the Redis Queue Demo plugin. No upgrades available yet.
+Initial release of the Redis Queue Demo plugin.
 
 == Developer Information ==
 

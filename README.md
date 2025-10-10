@@ -1,51 +1,32 @@
 # Redis Queue Demo for WordPress
 
-A comprehensive WordPress plugin demonstrating Redis queues for background job processing. This plugin showcases how to implement a robust queue system for WordPress, handling email operations, image processing, API integrations, and more.
+Robust Redis-backed background job processing for WordPress. Provides prioritized, delayed, and retryable jobs with an admin UI, REST API, token-based auth (scopes + rate limiting), and extensibility for custom job types.
 
-## Features
+## Feature Highlights
 
-### 🚀 **Core Queue System**
-- **Redis Integration**: Supports both Redis PHP extension and Predis library
-- **Priority Queues**: Jobs can be prioritized for processing order
-- **Delayed Jobs**: Schedule jobs to run at specific times
-- **Retry Logic**: Automatic retry with exponential backoff for failed jobs
-- **Job Metadata**: Comprehensive tracking and logging
-- **Memory Management**: Built-in memory limits and timeout handling
+Core:
+- Priority + delayed + retryable jobs
+- Redis (phpredis or Predis) abstraction
+- Memory/timeouts and job metadata persistence
 
-### 📧 **Email Processing Jobs**
-- **Single Emails**: Individual email sending
-- **Bulk Emails**: Mass email campaigns
-- **Newsletter Distribution**: Large-scale newsletter sending
-- **Template Support**: HTML and plain text emails
-- **Attachment Handling**: File attachments support
+Built‑in Jobs:
+- Email delivery (single/bulk)
+- Image processing (thumbnails, optimization)
+- Generic API / webhook style jobs
 
-### 🖼️ **Image Processing Jobs**
-- **Thumbnail Generation**: Multiple size thumbnails
-- **Image Optimization**: Compression and resizing
-- **Watermark Application**: Brand protection
-- **Format Conversion**: Convert between image formats
-- **Batch Processing**: Handle multiple images efficiently
+Interfaces:
+- Admin dashboard (stats, browser, test tools, purge, debug)
+- REST API (create jobs, trigger worker, health, stats)
 
-### 🔗 **API Integration Jobs**
-- **Social Media Posting**: Automated social media updates
-- **CRM Synchronization**: Customer data sync
-- **Webhook Processing**: Handle incoming webhook data
-- **Third-party APIs**: Generic API integration patterns
-- **Rate Limiting**: Respect API rate limits
+Security & Control:
+- Capability or API token auth
+- Token scopes (`worker`, `full`)
+- Per-token rate limiting
+- Structured request logging with rotation
 
-### 🛠️ **REST API Interface**
-- **Job Management**: Create, read, update, delete jobs
-- **Worker Control**: Trigger workers via API
-- **Queue Statistics**: Monitor queue performance
-- **Health Checks**: System status monitoring
-- **Authentication**: WordPress user capabilities
-
-### 📊 **Admin Interface**
-- **Dashboard**: Real-time queue statistics
-- **Job Browser**: View and manage all jobs
-- **Test Interface**: Create test jobs easily
-- **Settings Page**: Configure Redis and queue settings
-- **Health Monitor**: System status overview
+Extensibility:
+- Simple `Abstract_Base_Job` subclassing
+- Filters for dynamic job instantiation
 
 ## Installation
 
@@ -156,339 +137,109 @@ URL: https://httpbin.org/post
 Data: {"test": "message"}
 ```
 
-### 2. REST API Usage
+## Quick Start
 
-#### Authentication
-All API endpoints require WordPress authentication with `manage_options` capability.
+1. Install a Redis server (or use existing) and ensure the phpredis extension **or** Predis library is available.
+2. Clone into `wp-content/plugins/` and activate.
+3. Configure Redis + queue settings under: `Redis Queue → Settings`.
+4. Create a test job via the admin Test interface or REST API.
+5. Run workers manually (admin button) or on a schedule (cron / wp-cli / external runner).
 
-#### Create a Job
 ```bash
-curl -X POST "https://yoursite.com/wp-json/redis-queue/v1/jobs" \
-  -H "Content-Type: application/json" \
-  -H "X-WP-Nonce: your-nonce" \
-  -d '{
-    "type": "email",
-    "payload": {
-      "to": "user@example.com",
-      "subject": "Hello World",
-      "message": "This is a test email"
-    },
-    "priority": 10,
-    "queue": "default"
-  }'
+git clone https://github.com/soderlind/redis-queue-demo.git wp-content/plugins/redis-queue-demo
 ```
 
-#### Trigger Worker
+Optionally add Predis:
 ```bash
-curl -X POST "https://yoursite.com/wp-json/redis-queue/v1/workers/trigger" \
-  -H "Content-Type: application/json" \
-  -H "X-WP-Nonce: your-nonce" \
-  -d '{
-    "queues": ["default"],
-    "max_jobs": 10
-  }'
+composer require predis/predis
 ```
 
-#### Get Queue Statistics
-```bash
-curl -X GET "https://yoursite.com/wp-json/redis-queue/v1/stats" \
-  -H "X-WP-Nonce: your-nonce"
-```
-
-#### System Health Check
-```bash
-curl -X GET "https://yoursite.com/wp-json/redis-queue/v1/health" \
-  -H "X-WP-Nonce: your-nonce"
-```
-
-### 3. Programmatic Usage
-
-#### Creating Jobs in Code
-
+Define environment constants (optional) in `wp-config.php`:
 ```php
-// Get the plugin instance
-$redis_queue = redis_queue_demo();
 
-// Create an email job
-$email_job = new Email_Job([
-    'email_type' => 'single',
-    'to' => 'user@example.com',
-    'subject' => 'Welcome!',
-    'message' => 'Welcome to our site!'
+define( 'REDIS_QUEUE_PORT', 6379 );
+define( 'REDIS_QUEUE_DATABASE', 0 );
+```
+
+Then enqueue a job programmatically:
+```php
+$job = new Email_Job([
+  'email_type' => 'single',
+  'to' => 'admin@example.com',
+  'subject' => 'Hello',
+  'message' => 'Testing queue'
 ]);
-
-// Set job properties
-$email_job->set_priority(10);
-$email_job->set_queue_name('emails');
-
-// Enqueue the job
-$job_id = $redis_queue->queue_manager->enqueue($email_job);
+redis_queue_demo()->queue_manager->enqueue( $job );
 ```
 
-#### Processing Jobs
-
+Process jobs:
 ```php
-// Get worker instance
-$worker = new Sync_Worker(
-    $redis_queue->queue_manager,
-    $redis_queue->job_processor
-);
-
-// Process jobs from specific queues
-$results = $worker->process_jobs(['default', 'emails'], 5);
-
-echo "Processed: " . $results['processed'] . " jobs\n";
-echo "Successful: " . $results['successful'] . "\n";
-echo "Failed: " . $results['failed'] . "\n";
+redis_queue_process_jobs(); // helper or via admin UI
 ```
 
-#### Custom Job Types
+See Usage & REST docs for deeper examples.
 
-Create your own job types by extending the base job class:
+## Documentation
 
-```php
-class Custom_Job extends Abstract_Base_Job {
-    
-    public function execute() {
-        $data = $this->get_payload();
-        
-        // Your custom job logic here
-        $result = $this->process_custom_data($data);
-        
-        return new Basic_Job_Result(
-            true,
-            'Custom job completed successfully',
-            $result
-        );
-    }
-    
-    public function get_job_type() {
-        return 'custom_job';
-    }
-    
-    private function process_custom_data($data) {
-        // Implement your custom processing logic
-        return ['processed' => true, 'timestamp' => time()];
-    }
-}
-```
+| Topic | Location |
+|-------|----------|
+| Usage & operations | `docs/usage.md` |
+| REST API (auth, scopes, rate limits) | `docs/worker-rest-api.md` |
+| Creating custom jobs | `docs/extending-jobs.md` |
+| This overview | `README.md` |
 
-## WordPress Integration Benefits
+## When to Use
 
-### Why Use Redis Queues in WordPress?
+Use this plugin to offload expensive or slow tasks: emails, media transformations, API calls, data synchronization, indexing, cache warming, and other background workloads that should not block page loads.
 
-1. **Performance**: Offload heavy tasks from HTTP requests
-2. **Reliability**: Jobs are persisted and can survive server restarts
-3. **Scalability**: Distribute work across multiple workers
-4. **User Experience**: Non-blocking operations keep sites responsive
-5. **Error Handling**: Automatic retries and failure management
+## Architecture Snapshot
 
-### Ideal Use Cases
+- WordPress plugin bootstrap registers queue manager + job processor
+- Redis stores queue + delayed sets; MySQL stores durable job records
+- Synchronous worker invoked via admin, REST, or scheduled execution
+- Job lifecycle: queued → (delayed ready) → processing → success/failure (with retry window)
+- Filters allow custom job class instantiation by type
 
-#### Email Operations
-- **Newsletter Campaigns**: Send thousands of emails without timeout
-- **Transactional Emails**: Reliable delivery with retry logic
-- **Email Templates**: Process complex HTML emails efficiently
+## Security Model
 
-#### Image Processing
-- **Media Uploads**: Generate thumbnails in background
-- **Bulk Operations**: Process multiple images efficiently
-- **CDN Uploads**: Async upload to external storage
+1. Default capability check (`manage_options`).
+2. Optional API token (bearer header) with: scope, rate limiting, request logging.
+3. Filters to customize allowed routes per scope.
 
-#### API Integrations
-- **Social Media**: Schedule posts across platforms
-- **CRM Systems**: Sync customer data reliably
-- **Analytics**: Send tracking data without blocking users
+Full details: `docs/worker-rest-api.md`.
 
-#### Content Operations
-- **Search Indexing**: Update search indices asynchronously
-- **Cache Warming**: Pre-generate cache for better performance
-- **Data Imports**: Process large datasets without timeouts
+## Extending
 
-## Advanced Features
+Implement a subclass of `Abstract_Base_Job`, override `get_job_type()` + `execute()`, optionally `should_retry()` and `handle_failure()`. Register dynamically with the `redis_queue_demo_create_job` filter. Full guide: `docs/extending-jobs.md`.
 
-### Job Priorities
+## Scheduling Workers
 
-Jobs support priority levels (0-100, lower = higher priority):
-
-```php
-$urgent_job->set_priority(0);    // Highest priority
-$normal_job->set_priority(50);   // Normal priority
-$low_job->set_priority(100);     // Lowest priority
-```
-
-### Delayed Execution
-
-Schedule jobs to run at specific times:
-
-```php
-$job->set_delay_until(time() + 3600); // Run in 1 hour
-```
-
-### Queue Management
-
-Create separate queues for different job types:
-
-```php
-$email_job->set_queue_name('emails');
-$image_job->set_queue_name('images');
-$api_job->set_queue_name('api_calls');
-```
-
-### Error Handling
-
-Jobs include comprehensive error handling:
-
-- **Automatic Retries**: Failed jobs are automatically retried
-- **Exponential Backoff**: Increasing delays between retries
-- **Error Logging**: Detailed error messages and stack traces
-- **Dead Letter Queue**: Permanently failed jobs are preserved
-
-### Monitoring and Metrics
-
-Track queue performance:
-
-- **Job Counts**: Queued, processing, completed, failed
-- **Processing Times**: Average job execution duration
-- **Failure Rates**: Success/failure percentages
-- **Queue Depths**: Backlog monitoring
-
-## Troubleshooting
-
-### Common Issues
-
-#### Redis Connection Failed
-```
-Error: Redis connection failed
-```
-**Solutions:**
-1. Verify Redis server is running: `redis-cli ping`
-2. Check host/port settings in plugin configuration
-3. Verify firewall allows Redis connections
-4. Test Redis authentication if password is set
-
-#### Jobs Not Processing
-```
-Jobs remain in 'queued' status
-```
-**Solutions:**
-1. Trigger worker manually via admin interface
-2. Check for PHP errors in WordPress error logs
-3. Verify job payload is valid JSON
-4. Check memory limits and timeouts
-
-#### Memory Exhaustion
-```
-Fatal error: Allowed memory size exhausted
-```
-**Solutions:**
-1. Reduce batch size in settings
-2. Increase PHP memory limit
-3. Check for memory leaks in custom jobs
-4. Process fewer jobs per worker run
-
-### Debug Mode
-
-Enable debug logging by adding to wp-config.php:
-
-```php
-define( 'REDIS_QUEUE_DEBUG', true );
-define( 'WP_DEBUG_LOG', true );
-```
-
-### Health Checks
-
-Use the health endpoint to verify system status:
-
+Examples:
 ```bash
-curl -X GET "https://yoursite.com/wp-json/redis-queue/v1/health"
-```
-
-## Performance Optimization
-
-### Redis Configuration
-
-Optimize Redis for queue workloads:
-
-```bash
-# redis.conf optimizations
-maxmemory-policy allkeys-lru
-save 900 1
-tcp-keepalive 60
-timeout 300
-```
-
-### WordPress Configuration
-
-Optimize WordPress for background processing:
-
-```php
-// wp-config.php
-define( 'WP_MEMORY_LIMIT', '512M' );
-define( 'WP_MAX_MEMORY_LIMIT', '512M' );
-ini_set( 'max_execution_time', 300 );
-```
-
-### Worker Deployment
-
-For production environments, run workers via cron or supervisord:
-
-```bash
-# Cron job (runs every minute)
-* * * * * /usr/bin/php /path/to/wordpress/wp-cron.php
-
-# Or trigger via WP-CLI
+# Cron (every minute)
 * * * * * wp eval "redis_queue_demo()->process_jobs();"
 ```
+For higher throughput run multiple workers targeting distinct queues.
 
-## Security Considerations
+## Requirements
 
-### Access Control
-
-- REST API endpoints require `manage_options` capability
-- Admin interface restricted to administrators
-- Job payloads are sanitized and validated
-- SQL injection protection via prepared statements
-
-### Data Protection
-
-- Job payloads stored in database with WordPress security measures
-- Redis connection supports password authentication
-- Sensitive data should be encrypted before queuing
-- Failed job data is preserved for debugging but access-controlled
-
-## License
-
-This plugin is released under the GPL v2 or later license. See the [LICENSE](LICENSE) file for details.
+- WordPress 6.7+
+- PHP 8.3+
+- Redis server
+- phpredis extension OR Composer + Predis
 
 ## Contributing
 
-Contributions are welcome! Please:
+Contributions welcome. Please fork, branch, commit with clear messages, and open a PR. Add tests or reproducible steps for behavior changes.
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+## License
 
-## Support
+GPL v2 or later. See `LICENSE`.
 
-For support and questions:
+## Author
 
-- **GitHub Issues**: [Create an issue](https://github.com/soderlind/redis-queue-demo/issues)
-- **WordPress Forums**: [Plugin support forum](https://wordpress.org/support/plugin/redis-queue-demo)
-- **Email**: [per@soderlind.no](mailto:per@soderlind.no)
-
-## Changelog
-
-### 1.0.0
-- Initial release
-- Complete queue system implementation
-- Email, image, and API job types
-- REST API interface
-- WordPress admin interface
-- Comprehensive documentation
+Made with ❤️ by [Per Søderlind](https://soderlind.com)
 
 ---
 
-**Made with ❤️ by [Per Søderlind](https://soderlind.com)**
+For detailed usage, advanced features, troubleshooting, and performance tuning visit `docs/usage.md`.

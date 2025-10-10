@@ -1,0 +1,27 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on Keep a Changelog and adheres to Semantic Versioning.
+
+## [1.0.1] - 2025-10-10
+### Added
+- Documentation restructuring: Added `docs/README.md` index, `docs/extending-jobs.md`, and `docs/usage.md`.
+- New filter examples for token scope & route customization in `worker-rest-api.md`.
+- Advanced guidance: created scaling & maintenance docs placeholders (to be added) and extensibility guide.
+- Rate limiting, token scopes, and request logging documented.
+
+### Changed
+- Refactored `README.md` to concise overview with links.
+- Improved failure handling semantics (null-safe exception handling in jobs).
+
+### Fixed
+- Minor doc inconsistencies and clarified token scope behavior.
+
+## [1.0.0] - 2025-10-01
+### Added
+- Initial release: core Redis-backed queue system (priority, delay, retries).
+- Built-in jobs: Email, Image Processing, API Sync.
+- Admin dashboard, job browser, test tools, purge utilities.
+- REST API with job management, stats, health, worker trigger.
+- Basic logging and retry backoff strategies.

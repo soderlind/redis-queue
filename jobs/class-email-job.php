@@ -97,7 +97,17 @@ class Email_Job extends Abstract_Base_Job {
 				array( 'email_type' => 'single' )
 			);
 		} else {
-			return $this->failure( 'Failed to send email to: ' . $to );
+			// Attempt to surface PHPMailer error if available.
+			$phpmailer_error = null;
+			global $phpmailer;
+			if ( isset( $phpmailer ) && is_object( $phpmailer ) && ! empty( $phpmailer->ErrorInfo ) ) {
+				$phpmailer_error = $phpmailer->ErrorInfo;
+			}
+			$metadata = array(
+				'email_type'      => 'single',
+				'phpmailer_error' => $phpmailer_error,
+			);
+			return $this->failure( 'Failed to send email to: ' . $to, null, $metadata );
 		}
 	}
 
@@ -300,8 +310,8 @@ class Email_Job extends Abstract_Base_Job {
 	 * Handle job failure specific to email jobs.
 	 *
 	 * @since 1.0.0
-	 * @param Exception $exception The exception that caused the failure.
-	 * @param int       $attempt   The current attempt number.
+	 * @param Exception|null $exception The exception that caused the failure (if any).
+	 * @param int            $attempt   The current attempt number.
 	 * @return void
 	 */
 	public function handle_failure( $exception, $attempt ) {
@@ -326,13 +336,18 @@ class Email_Job extends Abstract_Base_Job {
 	 * Determine if the email job should be retried.
 	 *
 	 * @since 1.0.0
-	 * @param Exception $exception The exception that caused the failure.
-	 * @param int       $attempt   The current attempt number.
+	 * @param Exception|null $exception The exception that caused the failure (if any).
+	 * @param int            $attempt   The current attempt number.
 	 * @return bool Whether to retry the job.
 	 */
 	public function should_retry( $exception, $attempt ) {
-		// Don't retry for invalid email addresses.
-		if ( strpos( $exception->getMessage(), 'Invalid email' ) !== false ) {
+		// Don't retry for invalid email addresses (only if we have an exception message).
+		if ( $exception instanceof Exception && strpos( $exception->getMessage(), 'Invalid email' ) !== false ) {
+			return false;
+		}
+
+		// If there is no exception (logical failure like wp_mail returned false), avoid noisy retries.
+		if ( ! ( $exception instanceof Exception ) ) {
 			return false;
 		}
 

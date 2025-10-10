@@ -518,7 +518,7 @@ class Redis_Queue_Manager {
 	public function reset_stuck_jobs( $timeout_minutes = 30 ) {
 		global $wpdb;
 
-		$table_name = $wpdb->prefix . 'redis_queue_jobs';
+		$table_name   = $wpdb->prefix . 'redis_queue_jobs';
 		$timeout_time = date( 'Y-m-d H:i:s', time() - ( $timeout_minutes * 60 ) );
 
 		$result = $wpdb->update(
