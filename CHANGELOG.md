@@ -5,7 +5,8 @@ All notable changes to this project will be documented in this file.
 The format is based on Keep a Changelog and adheres to Semantic Versioning.
 
 ## [Unreleased]
-_No changes yet._
+### Removed
+- Deleted development-only `debug.php` script (replaced by internal diagnostics via `Redis_Queue_Manager::diagnostic()`).
 
 ## [1.2.0] - 2025-10-10
 ### Removed
