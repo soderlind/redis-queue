@@ -313,7 +313,7 @@ GPL v2 or later. See `LICENSE`.
 
 ## Author
 
-Made with ❤️ by [Per Søderlind](https://soderlind.com)
+Made with ❤️ by [Per Søderlind](https://soderlind.no)
 
 ---
 
