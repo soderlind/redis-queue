@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and adheres to Semantic Versioning.
 
+## [1.0.2] - 2025-10-10
+### Added
+- GitHub updater integration and release workflows (`.github/workflows/*`, `includes/class-github-plugin-updater.php`).
+- Funding configuration (`.github/FUNDING.yml`).
+- Expanded root README with direct links to documentation set.
+- Composer metadata: enriched description & keywords.
+
+### Changed
+- Bumped plugin version to 1.0.2.
+
+### Fixed
+- Minor documentation cross-link clarity improvements.
+
 ## [1.0.1] - 2025-10-10
 ### Added
 - Documentation restructuring: Added `docs/README.md` index, `docs/extending-jobs.md`, and `docs/usage.md`.

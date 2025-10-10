@@ -5,7 +5,7 @@ Tags: redis, queue, background, jobs, performance
 Requires at least: 6.7
 Tested up to: 6.8
 Requires PHP: 8.3
-Stable tag: 1.0.1
+Stable tag: 1.0.2
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -15,7 +15,7 @@ Redis-backed background job processing for WordPress: priority, delay, retries, 
 
 Redis Queue Demo is a comprehensive WordPress plugin that demonstrates how to implement enterprise-grade background job processing using Redis queues. This plugin showcases effective techniques for handling time-consuming, resource-intensive, or critical tasks asynchronously, improving user experience and site performance.
 
-**Key Features (1.0.1):**
+**Key Features (1.0.2):**
 
 * **Background Job Processing**: Handle time-consuming tasks without blocking user interactions
 * **REST API Integration**: Complete REST API for worker management, job creation, stats & health
@@ -102,6 +102,13 @@ The plugin includes fallback mechanisms and graceful error handling. Jobs will f
 
 == Changelog ==
 
+= 1.0.2 =
+* Added GitHub updater class and release automation workflows
+* Added funding configuration
+* Added README documentation hyperlinks section
+* Updated composer.json metadata (description, keywords)
+* Version bump to 1.0.2
+
 = 1.0.1 =
 * Added documentation index & extensibility guide (`docs/README.md`, `extending-jobs.md`, `usage.md`)
 * Added token scopes (worker/full) with filters to customize allowed routes
@@ -122,6 +129,9 @@ The plugin includes fallback mechanisms and graceful error handling. Jobs will f
 * WordPress 6.7+ and PHP 8.3+ compatibility
 
 == Upgrade Notice ==
+
+= 1.0.2 =
+Adds GitHub-based updates, enriched docs & metadata. No database changes.
 
 = 1.0.1 =
 Documentation + security enhancements (token scopes, rate limiting, logging). No database changes.
