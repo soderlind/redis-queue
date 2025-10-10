@@ -26,5 +26,10 @@
 	"support": {
 		"issues": "https://github.com/soderlind/redis-queue-demo/issues"
 	},
-	"require": {}
+	"require": {},
+	"autoload": {
+		"psr-4": {
+			"Soderlind\\RedisQueueDemo\\": "src/"
+		}
+	}
 }

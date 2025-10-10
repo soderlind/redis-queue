@@ -213,17 +213,44 @@ class Sync_Worker {
 		$this->stats[ 'last_activity' ] = microtime( true );
 
 		try {
-			// Prepare job data for processor.
+			$payload_array = json_decode( $job_data[ 'payload' ], true );
+			if ( ! is_array( $payload_array ) ) {
+				$payload_array = array();
+			}
+			$job_type = $job_data[ 'job_type' ];
+			// Infer class similar to namespaced worker.
+			$map       = array(
+				'email'            => 'Soderlind\\RedisQueueDemo\\Jobs\\Email_Job',
+				'image_processing' => 'Soderlind\\RedisQueueDemo\\Jobs\\Image_Processing_Job',
+				'api_sync'         => 'Soderlind\\RedisQueueDemo\\Jobs\\API_Sync_Job',
+			);
+			$job_class = null;
+			if ( isset( $map[ $job_type ] ) ) {
+				$job_class = $map[ $job_type ];
+			} elseif ( str_contains( $job_type, '\\' ) && class_exists( $job_type ) ) {
+				$job_class = $job_type;
+			}
+			if ( empty( $job_class ) ) {
+				// Log and abort gracefully; update status to failed to avoid infinite loop.
+				error_log( 'Redis Queue Demo (legacy worker): Unable to infer class for job_id=' . $job_id . ' job_type=' . $job_type );
+				$wpdb->update( $wpdb->prefix . 'redis_queue_jobs', array( 'status' => 'failed', 'error_message' => 'Unresolvable job class', 'updated_at' => current_time( 'mysql' ) ), array( 'job_id' => $job_id ), array( '%s', '%s', '%s' ), array( '%s' ) );
+				return array( 'success' => false, 'job_id' => $job_id, 'error' => 'Unresolvable job class', 'code' => 0 );
+			}
+			$serialized_job     = array(
+				'class'     => $job_class,
+				'payload'   => $payload_array,
+				'options'   => isset( $payload_array[ 'options' ] ) ? $payload_array[ 'options' ] : array(),
+				'timestamp' => $job_data[ 'created_at' ],
+			);
 			$processed_job_data = array(
-				'job_id'         => $job_data[ 'job_id' ],
-				'job_type'       => $job_data[ 'job_type' ],
+				'job_id'         => $job_id,
+				'job_type'       => $job_type,
 				'queue_name'     => $job_data[ 'queue_name' ],
 				'priority'       => $job_data[ 'priority' ],
-				'payload'        => json_decode( $job_data[ 'payload' ], true ),
-				'serialized_job' => json_decode( $job_data[ 'payload' ], true ), // Simplified for demo.
+				'payload'        => $payload_array,
+				'serialized_job' => $serialized_job,
 			);
-
-			$result = $this->job_processor->process_job( $processed_job_data );
+			$result             = $this->job_processor->process_job( $processed_job_data );
 
 			$this->stats[ 'jobs_processed' ]++;
 			$this->stats[ 'last_activity' ] = microtime( true );
