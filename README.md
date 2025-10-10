@@ -318,3 +318,60 @@ Made with ❤️ by [Per Søderlind](https://soderlind.com)
 ---
 
 For detailed usage, advanced features, troubleshooting, and performance tuning visit the [Usage guide](docs/usage.md). Additional topics: [Scaling](docs/scaling.md), [Maintenance](docs/maintenance.md).
+
+## Namespacing & Backward Compatibility (Refactor Notes)
+
+As of the latest refactor, all core classes have been migrated to the `Soderlind\\RedisQueueDemo` namespace and autoloaded via Composer PSR-4. Legacy global class names (`Redis_Queue_Demo`, `Redis_Queue_Manager`, `Job_Processor`, `Sync_Worker`, `REST_Controller`, `Admin_Interface`, job classes, etc.) are still available through `class_alias` so existing integrations that referenced the old globals continue to work without modification.
+
+Removed legacy duplicate files:
+```
+admin/class-admin-interface.php
+api/class-rest-controller.php
+workers/class-sync-worker.php
+```
+Their logic now lives in:
+```
+src/Admin/Admin_Interface.php
+src/API/REST_Controller.php
+src/Workers/Sync_Worker.php
+```
+
+Helper functions (`redis_queue_demo()`, `redis_queue_enqueue_job()`, `redis_queue_process_jobs()`) remain unchanged for ergonomics.
+
+If you previously required or included specific legacy files manually, you should remove those `require` statements—Composer autoload now handles class loading.
+
+### Migrating Custom Integrations
+
+If you instantiated legacy classes directly, both of the following are now equivalent:
+```php
+$manager = new Redis_Queue_Manager(); // legacy global (still works)
+$manager = new \Soderlind\RedisQueueDemo\Core\Redis_Queue_Manager(); // namespaced
+```
+
+Custom job classes should adopt the namespace pattern and be placed under `src/YourNamespace/` with an appropriate `composer.json` autoload mapping, or hooked via the `redis_queue_demo_create_job` filter returning a namespaced job instance.
+
+### Why This Change?
+
+1. Autoload performance & structure clarity.
+2. Avoiding global symbol collisions.
+3. Easier extension via modern PHP tooling.
+4. Future unit test isolation.
+
+If you encounter any missing class errors after upgrading, clear WordPress object/opcode caches and run:
+```bash
+composer dump-autoload -o
+```
+
+Please report any backward compatibility regressions in the issue tracker.
+
+### Admin Interface Inlining (UI Unchanged)
+
+The legacy `admin/class-admin-interface.php` file was fully inlined into the namespaced `src/Admin/Admin_Interface.php` to remove manual `require` calls. To preserve the exact markup/CSS hooks, the original page layouts were ported as partial templates under:
+```
+src/Admin/partials/
+   dashboard-inline.php
+   jobs-inline.php
+   test-inline.php
+   settings-inline.php
+```
+These are loaded internally by the namespaced class; you should not include them directly. If you previously overrode or filtered admin output, existing selectors and element structures remain stable.

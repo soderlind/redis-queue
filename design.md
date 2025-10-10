@@ -299,9 +299,7 @@ redis-queue-demo/
 ├── redis-queue-demo.php              # Main plugin file
 ├── uninstall.php                     # Cleanup on plugin removal
 ├── includes/                         # Core functionality
-│   ├── class-redis-queue-manager.php
 │   ├── class-queue-worker.php
-│   ├── class-job-processor.php
 │   └── interfaces/
 │       ├── interface-queue-job.php
 │       └── interface-job-result.php

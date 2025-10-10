@@ -4,6 +4,8 @@ This guide explains how to create custom background jobs by extending the base a
 
 ## Core Concepts
 
+Important: The plugin now exclusively uses namespaced classes and only canonical job type identifiers you define (e.g. `email`, `image_processing`, `api_sync`, or your custom strings). Legacy/global class name variants (like `Email_Job`, `email_job`) are not auto-mapped.
+
 A job represents a unit of work executed asynchronously by a worker. Each job class encapsulates:
 
 - A unique job type identifier (string)

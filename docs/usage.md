@@ -85,28 +85,30 @@ curl -X POST "https://yoursite.com/wp-json/redis-queue/v1/jobs" \
 
 ### Creating & Enqueuing Jobs
 ```php
-$redis_queue = redis_queue_demo();
+use Soderlind\RedisQueueDemo\Jobs\Email_Job;
 
 $email_job = new Email_Job([
-    'email_type' => 'single',
-    'to' => 'user@example.com',
-    'subject' => 'Welcome!',
-    'message' => 'Welcome to our site!'
+  'email_type' => 'single',
+  'to'         => 'user@example.com',
+  'subject'    => 'Welcome!',
+  'message'    => 'Welcome to our site!'
 ]);
 
 $email_job->set_priority(10);
 $email_job->set_queue_name('emails');
 
-$job_id = $redis_queue->queue_manager->enqueue($email_job);
+$job_id = redis_queue_demo()->get_queue_manager()->enqueue( $email_job );
 ```
 
 ### Processing Jobs Manually
 ```php
+use Soderlind\RedisQueueDemo\Workers\Sync_Worker;
+
 $worker = new Sync_Worker(
-    $redis_queue->queue_manager,
-    $redis_queue->job_processor
+  redis_queue_demo()->get_queue_manager(),
+  redis_queue_demo()->get_job_processor()
 );
-$results = $worker->process_jobs(['default', 'emails'], 5);
+$results = $worker->process_jobs( [ 'default', 'emails' ], 5 );
 ```
 
 ### Custom Job Skeleton
