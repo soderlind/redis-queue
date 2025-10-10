@@ -28,6 +28,70 @@ Extensibility:
 - Simple `Abstract_Base_Job` subclassing
 - Filters for dynamic job instantiation
 
+
+## WordPress Tasks That can Benefit from Redis Queues
+
+### High-Impact Use Cases
+
+#### 1.1 Email Operations
+- **Bulk email sending** (newsletters, notifications)
+- **Transactional emails** (order confirmations, password resets)
+- **Email campaign processing**
+- **Benefits**: Prevents timeouts, improves user experience, handles SMTP failures gracefully
+
+#### 1.2 Image Processing
+- **Thumbnail generation** for multiple sizes
+- **Image optimization** (compression, format conversion)
+- **Watermark application**
+- **Benefits**: Reduces page load times, prevents memory exhaustion
+
+#### 1.3 Data Import/Export
+- **CSV/XML imports** (products, users, posts)
+- **Database migrations**
+- **Content synchronization** between sites
+- **Benefits**: Handles large datasets without timeout issues
+
+#### 1.4 Content Processing
+- **Search index updates** (Elasticsearch, Algolia)
+- **Cache warming** after content updates
+- **Content analysis** (SEO scoring, readability)
+- **Benefits**: Keeps content fresh without blocking user interactions
+
+#### 1.5 Third-Party API Integrations
+- **Social media posting** (Facebook, Twitter, LinkedIn)
+- **CRM synchronization** (Salesforce, HubSpot)
+- **Analytics data collection** (Google Analytics, custom tracking)
+- **Benefits**: Handles API rate limits and failures gracefully
+
+#### 1.6 E-commerce Operations
+- **Order processing** workflows
+- **Inventory synchronization**
+- **Payment verification** processes
+- **Benefits**: Ensures order integrity and improves checkout experience
+
+#### 1.7 Content Publishing
+- **Scheduled post publishing**
+- **Content distribution** to multiple platforms
+- **SEO metadata generation**
+- **Benefits**: Reliable scheduling and cross-platform consistency
+
+### Medium-Impact Use Cases
+
+#### 1.8 User Management
+- **User registration** workflows
+- **Profile data enrichment**
+- **Permission updates** across systems
+
+#### 1.9 Backup Operations
+- **Database backups**
+- **File system backups**
+- **Remote backup uploads**
+
+#### 1.10 Analytics & Reporting
+- **Report generation**
+- **Data aggregation**
+- **Performance metrics** calculation
+
 ## Installation
 
 ### Prerequisites
@@ -183,10 +247,13 @@ See Usage & REST docs for deeper examples.
 
 | Topic | Location |
 |-------|----------|
-| Usage & operations | `docs/usage.md` |
-| REST API (auth, scopes, rate limits) | `docs/worker-rest-api.md` |
-| Creating custom jobs | `docs/extending-jobs.md` |
-| This overview | `README.md` |
+| Documentation index | [docs/README.md](docs/README.md) |
+| Usage & operations | [docs/usage.md](docs/usage.md) |
+| REST API (auth, scopes, rate limits) | [docs/worker-rest-api.md](docs/worker-rest-api.md) |
+| Creating custom jobs | [docs/extending-jobs.md](docs/extending-jobs.md) |
+| Scaling strategies | [docs/scaling.md](docs/scaling.md) |
+| Maintenance & operations | [docs/maintenance.md](docs/maintenance.md) |
+| This overview | README.md |
 
 ## When to Use
 
@@ -206,11 +273,11 @@ Use this plugin to offload expensive or slow tasks: emails, media transformation
 2. Optional API token (bearer header) with: scope, rate limiting, request logging.
 3. Filters to customize allowed routes per scope.
 
-Full details: `docs/worker-rest-api.md`.
+Full details: see the [REST API documentation](docs/worker-rest-api.md).
 
 ## Extending
 
-Implement a subclass of `Abstract_Base_Job`, override `get_job_type()` + `execute()`, optionally `should_retry()` and `handle_failure()`. Register dynamically with the `redis_queue_demo_create_job` filter. Full guide: `docs/extending-jobs.md`.
+Implement a subclass of `Abstract_Base_Job`, override `get_job_type()` + `execute()`, optionally `should_retry()` and `handle_failure()`. Register dynamically with the `redis_queue_demo_create_job` filter. Full guide: [Extending Jobs](docs/extending-jobs.md).
 
 ## Scheduling Workers
 
@@ -242,4 +309,4 @@ Made with ❤️ by [Per Søderlind](https://soderlind.com)
 
 ---
 
-For detailed usage, advanced features, troubleshooting, and performance tuning visit `docs/usage.md`.
+For detailed usage, advanced features, troubleshooting, and performance tuning visit the [Usage guide](docs/usage.md). Additional topics: [Scaling](docs/scaling.md), [Maintenance](docs/maintenance.md).
