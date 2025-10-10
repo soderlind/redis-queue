@@ -2,6 +2,8 @@
 
 Robust Redis-backed background job processing for WordPress. Provides prioritized, delayed, and retryable jobs with an admin UI, REST API, token-based auth (scopes + rate limiting), and extensibility for custom job types.
 
+The idea is to give inspiration to build production-ready queue systems in WordPress, following best practices and patterns.
+
 ## Feature Highlights
 
 Core:
@@ -123,15 +125,21 @@ composer require predis/predis
 
 ### Plugin Installation
 
-1. **Download/Clone** this plugin to your WordPress plugins directory:
-```bash
-cd wp-content/plugins/
-git clone https://github.com/soderlind/redis-queue-demo.git
-```
 
-2. **Activate** the plugin through the WordPress admin interface
+- **Quick Install**
 
-3. **Configure Redis** settings in the plugin settings page
+   - Download [`redis-queue-demo.zip`](https://github.com/soderlind/redis-queue-demo/releases/latest/download/redis-queue-demo.zip)
+   - Upload via  Plugins > Add New > Upload Plugin
+   - Activate the plugin.
+
+- **Composer Install**
+
+   ```bash
+   composer require soderlind/redis-queue-demo
+   ```
+
+- **Updates**
+   * Plugin [updates are handled automatically](https://github.com/soderlind/wordpress-plugin-github-updater#readme) via GitHub. No need to manually download and install updates.
 
 ## Configuration
 
