@@ -26,7 +26,9 @@
 	"support": {
 		"issues": "https://github.com/soderlind/redis-queue-demo/issues"
 	},
-	"require": {},
+	"require": {
+		"yahnis-elsts/plugin-update-checker": "^5.6"
+	},
 	"autoload": {
 		"psr-4": {
 			"Soderlind\\RedisQueueDemo\\": "src/"

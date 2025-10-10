@@ -100,6 +100,7 @@ The plugin includes fallback mechanisms and graceful error handling. Jobs will f
 4. **Test Interface** - Tools for testing different job types and queue operations
 5. **Settings Panel** - Redis connection configuration and plugin options
 
+
 == Changelog ==
 
 = 1.2.0 =
@@ -150,33 +151,3 @@ Documentation + security enhancements (token scopes, rate limiting, logging). No
 = 1.0.0 =
 Initial release of the Redis Queue Demo plugin.
 
-== Developer Information ==
-
-**Author:** Per Soderlind
-**Plugin URI:** https://soderlind.no
-**GitHub:** https://github.com/soderlind/redis-queue-demo
-
-This plugin serves as a comprehensive reference for implementing Redis-based background job processing in WordPress. It demonstrates enterprise-grade patterns while maintaining WordPress coding standards.
-
-**Architecture Overview:**
-
-* **Queue Manager**: Core Redis queue operations
-* **Job Processor**: Handles job execution and lifecycle
-* **REST API**: Complete API for external worker management
-* **Admin Interface**: WordPress admin integration
-* **Job Types**: Extensible job type system
-
-**Contributing:**
-
-This is a demonstration plugin designed for educational purposes. Feel free to use the code as a reference for your own implementations.
-
-== Support ==
-
-This plugin is provided as-is for educational and demonstration purposes. For questions about implementation or extending the functionality, please refer to the comprehensive documentation included with the plugin.
-
-**Documentation Files:**
-* README.md - Complete setup and usage guide
-* IMPLEMENTATION_SUMMARY.md - Technical implementation details
-* design.md - Original design document and architecture
-
-For Redis-specific questions, consult the official Redis documentation at https://redis.io/documentation

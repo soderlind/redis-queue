@@ -25,15 +25,15 @@ final class Redis_Queue_Demo {
 		return self::$instance;
 	}
 
-	private function __construct() {
+	public function __construct() {
 		// Updater (use namespaced updater class).
-		GitHub_Plugin_Updater::create_with_assets(
-			'https://github.com/soderlind/redis-queue-demo',
-			REDIS_QUEUE_DEMO_PLUGIN_FILE,
-			'redis-queue-demo',
-			'/redis-queue-demo\.zip/',
-			'main'
-		);
+		// $updater = GitHub_Plugin_Updater::create_with_assets(
+		// 	'https://github.com/soderlind/redis-queue-demo',
+		// 	REDIS_QUEUE_DEMO_PLUGIN_FILE,
+		// 	'redis-queue-demo',
+		// 	'/redis-queue-demo\.zip/',
+		// 	'main'
+		// );
 		$this->init_hooks();
 	}
 
