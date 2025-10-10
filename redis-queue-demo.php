@@ -96,6 +96,18 @@ final class Redis_Queue_Demo {
 	 * @since 1.0.0
 	 */
 	private function __construct() {
+		//Add plugin updater
+		if ( ! class_exists( 'Soderlind\WordPress\GitHub_Plugin_Updater' ) ) {
+			require_once REDIS_QUEUE_DEMO_PLUGIN_DIR . 'includes/class-plugin-updater.php';
+		}
+
+		\Soderlind\WordPress\GitHub_Plugin_Updater::create_with_assets(
+			'https://github.com/soderlind/redis-queue-demo',
+			REDIS_QUEUE_DEMO_PLUGIN_FILE,
+			'redis-queue-demo',
+			'/redis-queue-demo\.zip/',
+			'main'
+		);
 		$this->init_hooks();
 	}
 
@@ -140,6 +152,8 @@ final class Redis_Queue_Demo {
 	 * @since 1.0.0
 	 */
 	private function load_dependencies() {
+
+
 		// Load interfaces.
 		require_once REDIS_QUEUE_DEMO_PLUGIN_DIR . 'includes/interfaces/interface-queue-job.php';
 		require_once REDIS_QUEUE_DEMO_PLUGIN_DIR . 'includes/interfaces/interface-job-result.php';
