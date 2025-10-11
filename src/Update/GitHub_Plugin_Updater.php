@@ -26,7 +26,7 @@ class GitHub_Plugin_Updater {
 		$this->branch                = $config[ 'branch' ] ?? 'main';
 		$this->name_regex            = $config[ 'name_regex' ] ?? '';
 		$this->enable_release_assets = $config[ 'enable_release_assets' ] ?? ! empty( $this->name_regex );
-		// add_action( 'init', [ $this, 'setup_updater' ] );
+		add_action( 'init', [ $this, 'setup_updater' ] );
 	}
 
 	public function setup_updater(): void {
