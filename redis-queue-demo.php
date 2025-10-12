@@ -32,16 +32,6 @@ if ( file_exists( $autoload ) ) {
 	require_once $autoload;
 }
 
-$updater = Soderlind\RedisQueueDemo\Update\GitHub_Plugin_Updater::create_with_assets(
-	'https://github.com/soderlind/redis-queue-demo',
-	REDIS_QUEUE_DEMO_PLUGIN_FILE,
-	'redis-queue-demo',
-	'/redis-queue-demo\.zip/',
-	'main'
-);
-
-
-
 // Bootstrap namespaced main class.
 Soderlind\RedisQueueDemo\Core\Redis_Queue_Demo::get_instance();
 
