@@ -7,7 +7,8 @@ use Soderlind\RedisQueue\Contracts\Job_Result;
 use Soderlind\RedisQueue\Contracts\Basic_Job_Result;
 
 /**
- * Namespaced Job Processor.
+ * Job Processor.
+ * Handles execution of queued jobs with error handling, retries, and performance tracking.
  */
 class Job_Processor {
 	private Redis_Queue_Manager $queue_manager;
@@ -15,66 +16,109 @@ class Job_Processor {
 	private float $start_time = 0.0;
 	private int $start_memory = 0;
 
+	/**
+	 * Constructor.
+	 * 
+	 * @param Redis_Queue_Manager $queue_manager Queue manager instance.
+	 */
 	public function __construct( Redis_Queue_Manager $queue_manager ) {
 		$this->queue_manager = $queue_manager;
 	}
 
+	/**
+	 * Process a single job.
+	 * Executes the job, handles success/failure, and tracks performance metrics.
+	 * 
+	 * @param array $job_data Job data from Redis.
+	 * @return Job_Result Result of job execution.
+	 */
 	public function process_job( $job_data ): Job_Result {
 		$this->current_job  = $job_data;
 		$this->start_time   = microtime( true );
 		$this->start_memory = memory_get_usage( true );
 		$job_id             = $job_data[ 'job_id' ] ?? 'unknown';
-		// Early sanitize to avoid downstream empty class warnings.
+		
+		// Sanitize job data to ensure required fields exist.
 		$job_data = $this->sanitize_job_data( $job_data );
+		
 		try {
+			// Create job instance from data.
 			$job = $this->create_job_instance( $job_data );
 			if ( ! $job ) {
 				throw new Exception( 'Failed to create job instance' );
 			}
+			
+			// Set execution timeout if specified.
 			$timeout = $job->get_timeout();
 			if ( $timeout > 0 ) {
 				@set_time_limit( $timeout );
 			}
+			
+			// Execute the job.
 			$result         = $job->execute();
 			$execution_time = microtime( true ) - $this->start_time;
 			$memory_usage   = memory_get_peak_usage( true ) - $this->start_memory;
+			
+			// Record performance metrics.
 			$result->set_execution_time( $execution_time );
 			$result->set_memory_usage( $memory_usage );
+			
+			// Handle result based on success/failure.
 			if ( $result->is_successful() ) {
 				$this->handle_successful_job( $job_id, $result );
 			} else {
 				$this->handle_failed_job( $job_id, $job, $result, 1, null );
 			}
+			
+			// Fire job processed action.
 			if ( function_exists( 'do_action' ) ) {
 				\do_action( 'redis_queue_job_processed', $job_id, $job, $result );
 			}
+			
 			return $result;
 		} catch (Exception $e) {
+			// Handle exception during job execution.
 			$execution_time = microtime( true ) - $this->start_time;
 			$memory_usage   = memory_get_peak_usage( true ) - $this->start_memory;
 			$result         = Basic_Job_Result::failure( $e->getMessage(), $e->getCode(), [ 'exception_type' => get_class( $e ) ] );
 			$result->set_execution_time( $execution_time );
 			$result->set_memory_usage( $memory_usage );
+			
+			// Attempt to handle failure with retry logic.
 			$job = $this->create_job_instance( $job_data );
 			if ( $job ) {
 				$this->handle_failed_job( $job_id, $job, $result, 1, $e );
 			} else {
 				$this->mark_job_failed( $job_id, $result );
 			}
+			
+			// Fire job failed action.
 			if ( function_exists( 'do_action' ) ) {
 				\do_action( 'redis_queue_job_failed', $job_id, $e, $job_data );
 			}
+			
 			return $result;
 		} finally {
+			// Clean up current job reference.
 			$this->current_job = null;
 		}
 	}
 
+	/**
+	 * Process multiple jobs from specified queues.
+	 * Continues processing until max_jobs reached or no more jobs available.
+	 * 
+	 * @param array $queues   Queue names to process from.
+	 * @param int   $max_jobs Maximum number of jobs to process.
+	 * @return array Processing results with statistics.
+	 */
 	public function process_jobs( $queues = [ 'default' ], $max_jobs = 10 ): array {
 		$results      = [];
 		$processed    = 0;
 		$start_time   = microtime( true );
 		$start_memory = memory_get_usage( true );
+		
+		// Fire batch start action.
 		if ( function_exists( 'do_action' ) ) {
 			\do_action( 'redis_queue_batch_start', $queues, $max_jobs );
 		}
