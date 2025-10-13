@@ -1,11 +1,11 @@
-=== Redis Queue Demo ===
+=== Redis Queue ===
 Contributors: PerS
-Donate link: https://github.com/soderlind/redis-queue-demo
+Donate link: https://github.com/soderlind/redis-queue
 Tags: redis, queue, background, jobs, performance
 Requires at least: 6.7
 Tested up to: 6.8
 Requires PHP: 8.3
-Stable tag: 1.2.0
+Stable tag: 1.3.0
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -13,9 +13,9 @@ Redis-backed background job processing for WordPress: priority, delay, retries, 
 
 == Description ==
 
-Redis Queue Demo is a comprehensive WordPress plugin that demonstrates how to implement enterprise-grade background job processing using Redis queues. This plugin showcases effective techniques for handling time-consuming, resource-intensive, or critical tasks asynchronously, improving user experience and site performance.
+Redis Queue is a comprehensive WordPress plugin that demonstrates how to implement enterprise-grade background job processing using Redis queues. This plugin showcases effective techniques for handling time-consuming, resource-intensive, or critical tasks asynchronously, improving user experience and site performance.
 
-**Key Features (1.2.0):**
+**Key Features (1.3.0):**
 
 * **Background Job Processing**: Handle time-consuming tasks without blocking user interactions
 * **REST API Integration**: Complete REST API for worker management, job creation, stats & health
@@ -55,7 +55,7 @@ Redis Queue Demo is a comprehensive WordPress plugin that demonstrates how to im
 
 **Installation Steps:**
 
-1. Upload the plugin files to `/wp-content/plugins/redis-queue-demo/`
+1. Upload the plugin files to `/wp-content/plugins/redis-queue/`
 2. Activate the plugin through the 'Plugins' screen in WordPress
 3. Configure Redis connection in the plugin settings
 4. Visit the Redis Queue Dashboard to start using the plugin
@@ -102,6 +102,17 @@ The plugin includes fallback mechanisms and graceful error handling. Jobs will f
 
 == Changelog ==
 
+= 1.3.0 =
+* Renamed plugin from "Redis Queue Demo" to "Redis Queue"
+* Updated namespace from Soderlind\RedisQueueDemo to Soderlind\RedisQueue
+* Updated text domain from redis-queue-demo to redis-queue
+* Updated constants from REDIS_QUEUE_DEMO_ to REDIS_QUEUE_ prefix
+* Updated function names (redis_queue_demo() to redis_queue())
+* Updated action and filter hooks (redis_queue_* instead of redis_queue_demo_*)
+* Updated GitHub repository references
+* Updated option names in database (redis_queue_ prefix)
+* Version bump to 1.3.0
+
 = 1.2.0 =
 * Removed legacy global class aliases and all back-compat shims
 * Deleted deprecated `includes/` directory (fully namespaced codebase)
@@ -137,6 +148,9 @@ The plugin includes fallback mechanisms and graceful error handling. Jobs will f
 * WordPress 6.7+ and PHP 8.3+ compatibility
 
 == Upgrade Notice ==
+
+= 1.3.0 =
+Plugin renamed from "Redis Queue Demo" to "Redis Queue". Updates namespace, constants, function names, and hooks. Not backward compatible with previous versions.
 
 = 1.2.0 =
 Removes deprecated legacy compatibility layers. Only namespaced classes and canonical job types remain.

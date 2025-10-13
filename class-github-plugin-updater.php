@@ -1,5 +1,5 @@
 <?php
-namespace Soderlind\WordPress;
+namespace Soderlind\RedisQueue\Update;
 
 use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 

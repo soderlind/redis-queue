@@ -1,5 +1,5 @@
 <?php
-namespace Soderlind\RedisQueueDemo\API;
+namespace Soderlind\RedisQueue\API;
 
 use Soderlind\RedisQueueDemo\Core\Redis_Queue_Manager;
 use Soderlind\RedisQueueDemo\Core\Job_Processor;
@@ -98,7 +98,7 @@ class REST_Controller {
 		$table_name = $wpdb->prefix . 'redis_queue_jobs';
 		$job        = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table_name} WHERE job_id = %s", $job_id ), ARRAY_A );
 		if ( ! $job ) {
-			return new WP_Error( 'job_not_found', __( 'Job not found.', 'redis-queue-demo' ), [ 'status' => 404 ] );
+			return new WP_Error( 'job_not_found', __( 'Job not found.', 'redis-queue' ), [ 'status' => 404 ] );
 		}
 		return \rest_ensure_response( $this->format_job_response( $job ) );
 	}
@@ -111,15 +111,15 @@ class REST_Controller {
 		try {
 			$job = $this->create_job_instance( $job_type, $payload );
 			if ( ! $job ) {
-				return new WP_Error( 'invalid_job_type', __( 'Invalid job type specified.', 'redis-queue-demo' ), [ 'status' => 400 ] );
+				return new WP_Error( 'invalid_job_type', __( 'Invalid job type specified.', 'redis-queue' ), [ 'status' => 400 ] );
 			}
 			$job->set_priority( $priority );
 			$job->set_queue_name( $queue );
 			$job_id = $this->queue_manager->enqueue( $job );
 			if ( ! $job_id ) {
-				return new WP_Error( 'enqueue_failed', __( 'Failed to enqueue job.', 'redis-queue-demo' ), [ 'status' => 500 ] );
+				return new WP_Error( 'enqueue_failed', __( 'Failed to enqueue job.', 'redis-queue' ), [ 'status' => 500 ] );
 			}
-			return \rest_ensure_response( [ 'success' => true, 'job_id' => $job_id, 'message' => __( 'Job created and enqueued successfully.', 'redis-queue-demo' ) ] );
+			return \rest_ensure_response( [ 'success' => true, 'job_id' => $job_id, 'message' => __( 'Job created and enqueued successfully.', 'redis-queue' ) ] );
 		} catch (Exception $e) {
 			return new WP_Error( 'job_creation_failed', $e->getMessage(), [ 'status' => 500 ] );
 		}
@@ -131,13 +131,13 @@ class REST_Controller {
 		$table_name = $wpdb->prefix . 'redis_queue_jobs';
 		$job        = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$table_name} WHERE job_id = %s AND status IN ('queued','failed')", $job_id ) );
 		if ( ! $job ) {
-			return new WP_Error( 'job_not_found_or_not_cancellable', __( 'Job not found or cannot be cancelled.', 'redis-queue-demo' ), [ 'status' => 404 ] );
+			return new WP_Error( 'job_not_found_or_not_cancellable', __( 'Job not found or cannot be cancelled.', 'redis-queue' ), [ 'status' => 404 ] );
 		}
 		$updated = $wpdb->update( $table_name, [ 'status' => 'cancelled', 'updated_at' => current_time( 'mysql' ) ], [ 'job_id' => $job_id ], [ '%s', '%s' ], [ '%s' ] );
 		if ( false === $updated ) {
-			return new WP_Error( 'job_cancellation_failed', __( 'Failed to cancel job.', 'redis-queue-demo' ), [ 'status' => 500 ] );
+			return new WP_Error( 'job_cancellation_failed', __( 'Failed to cancel job.', 'redis-queue' ), [ 'status' => 500 ] );
 		}
-		return \rest_ensure_response( [ 'success' => true, 'job_id' => $job_id, 'message' => __( 'Job cancelled successfully.', 'redis-queue-demo' ) ] );
+		return \rest_ensure_response( [ 'success' => true, 'job_id' => $job_id, 'message' => __( 'Job cancelled successfully.', 'redis-queue' ) ] );
 	}
 
 	public function trigger_worker( $request ) {
@@ -148,7 +148,7 @@ class REST_Controller {
 		}
 		try {
 			$results = $this->sync_worker->process_jobs( $queues, $max_jobs );
-			return \rest_ensure_response( [ 'success' => $results[ 'success' ], 'data' => $results, 'message' => sprintf( __( 'Worker processed %d jobs.', 'redis-queue-demo' ), $results[ 'processed' ] ?? 0 ) ] );
+			return \rest_ensure_response( [ 'success' => $results[ 'success' ], 'data' => $results, 'message' => sprintf( __( 'Worker processed %d jobs.', 'redis-queue' ), $results[ 'processed' ] ?? 0 ) ] );
 		} catch (Exception $e) {
 			return new WP_Error( 'worker_execution_failed', $e->getMessage(), [ 'status' => 500 ] );
 		}
@@ -192,13 +192,13 @@ class REST_Controller {
 	public function clear_queue( $request ) {
 		$queue_name = $request->get_param( 'name' );
 		if ( empty( $queue_name ) ) {
-			return new WP_Error( 'missing_queue_name', __( 'Queue name is required.', 'redis-queue-demo' ), [ 'status' => 400 ] );
+			return new WP_Error( 'missing_queue_name', __( 'Queue name is required.', 'redis-queue' ), [ 'status' => 400 ] );
 		}
 		$result = $this->queue_manager->clear_queue( $queue_name );
 		if ( $result ) {
-			return \rest_ensure_response( [ 'success' => true, 'message' => sprintf( __( 'Queue "%s" cleared successfully.', 'redis-queue-demo' ), $queue_name ) ] );
+			return \rest_ensure_response( [ 'success' => true, 'message' => sprintf( __( 'Queue "%s" cleared successfully.', 'redis-queue' ), $queue_name ) ] );
 		}
-		return new WP_Error( 'queue_clear_failed', __( 'Failed to clear queue.', 'redis-queue-demo' ), [ 'status' => 500 ] );
+		return new WP_Error( 'queue_clear_failed', __( 'Failed to clear queue.', 'redis-queue' ), [ 'status' => 500 ] );
 	}
 
 	public function check_permissions( $request ) {
@@ -226,36 +226,36 @@ class REST_Controller {
 				$route                  = $request->get_route();
 				$allowed                = true;
 				if ( 'full' !== $scope ) {
-					$allowed_routes = apply_filters( 'redis_queue_demo_token_allowed_routes', [ '/redis-queue/v1/workers/trigger' ], $scope );
+					$allowed_routes = apply_filters( 'redis_queue_token_allowed_routes', [ '/redis-queue/v1/workers/trigger' ], $scope );
 					$allowed        = in_array( $route, $allowed_routes, true );
 				}
-				$allowed                  = apply_filters( 'redis_queue_demo_token_scope_allow', $allowed, $scope, $request );
+				$allowed                  = apply_filters( 'redis_queue_token_scope_allow', $allowed, $scope, $request );
 				$this->last_scope_allowed = $allowed;
 				if ( ! $allowed ) {
-					return new WP_Error( 'rest_forbidden_scope', __( 'Token scope does not permit this endpoint.', 'redis-queue-demo' ), [ 'status' => 403 ] );
+					return new WP_Error( 'rest_forbidden_scope', __( 'Token scope does not permit this endpoint.', 'redis-queue' ), [ 'status' => 403 ] );
 				}
 				if ( $rate_per_min > 0 ) {
 					if ( ! $this->enforce_rate_limit( $provided, $rate_per_min ) ) {
 						$this->last_rate_limited = true;
-						return new WP_Error( 'rate_limited', __( 'Rate limit exceeded. Try again later.', 'redis-queue-demo' ), [ 'status' => 429 ] );
+						return new WP_Error( 'rate_limited', __( 'Rate limit exceeded. Try again later.', 'redis-queue' ), [ 'status' => 429 ] );
 					}
 				}
 				return true;
 			}
 		}
 		$this->last_auth_method = 'none';
-		return new WP_Error( 'rest_forbidden', __( 'You do not have permission to access this endpoint.', 'redis-queue-demo' ), [ 'status' => 403 ] );
+		return new WP_Error( 'rest_forbidden', __( 'You do not have permission to access this endpoint.', 'redis-queue' ), [ 'status' => 403 ] );
 	}
 
 	public function check_admin_permissions( $request ) {
 		if ( ! current_user_can( 'manage_options' ) || ! wp_verify_nonce( $request->get_header( 'X-WP-Nonce' ), 'wp_rest' ) ) {
-			return new WP_Error( 'rest_forbidden', __( 'You do not have permission to perform this action.', 'redis-queue-demo' ), [ 'status' => 403 ] );
+			return new WP_Error( 'rest_forbidden', __( 'You do not have permission to perform this action.', 'redis-queue' ), [ 'status' => 403 ] );
 		}
 		return true;
 	}
 
 	private function enforce_rate_limit( $token, $per_minute ) {
-		$key_root = 'redis_queue_demo_rate_' . substr( hash( 'sha256', $token ), 0, 24 );
+		$key_root = 'redis_queue_rate_' . substr( hash( 'sha256', $token ), 0, 24 );
 		$minute   = gmdate( 'YmdHi' );
 		$key      = $key_root . '_' . $minute;
 		$count    = (int) get_transient( $key );

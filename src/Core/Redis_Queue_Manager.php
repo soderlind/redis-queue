@@ -1,9 +1,9 @@
 <?php
-namespace Soderlind\RedisQueueDemo\Core;
+namespace Soderlind\RedisQueue\Core;
 
 use Exception;
 use Predis\Client as PredisClient;
-use Soderlind\RedisQueueDemo\Contracts\Queue_Job;
+use Soderlind\RedisQueue\Contracts\Queue_Job;
 
 /**
  * Redis Queue Manager.
@@ -13,26 +13,26 @@ class Redis_Queue_Manager {
 	/** @var \Redis|PredisClient|null */
 	private $redis = null;
 	private bool $connected = false;
-	private string $queue_prefix = 'redis_queue_demo:';
+	private string $queue_prefix = 'redis_queue:';
 
 	public function __construct() {
 		$this->connect();
 		// One-time repair of legacy Redis job entries missing serialized_job.class
 		if ( function_exists( 'get_option' ) && function_exists( 'update_option' ) ) {
-			$flag = \get_option( 'redis_queue_demo_repair_v1', '0' );
+			$flag = \get_option( 'redis_queue_repair_v1', '0' );
 			if ( '0' === $flag ) {
 				$this->repair_redis_jobs();
-				\update_option( 'redis_queue_demo_repair_v1', '1' );
+				\update_option( 'redis_queue_repair_v1', '1' );
 			}
 		}
 	}
 
 	private function connect(): bool {
 		try {
-			$host     = \redis_queue_demo()->get_option( 'redis_host', '127.0.0.1' );
-			$port     = \redis_queue_demo()->get_option( 'redis_port', 6379 );
-			$password = \redis_queue_demo()->get_option( 'redis_password', '' );
-			$database = \redis_queue_demo()->get_option( 'redis_database', 0 );
+			$host     = \redis_queue()->get_option( 'redis_host', '127.0.0.1' );
+			$port     = \redis_queue()->get_option( 'redis_port', 6379 );
+			$password = \redis_queue()->get_option( 'redis_password', '' );
+			$database = \redis_queue()->get_option( 'redis_database', 0 );
 
 			if ( \extension_loaded( 'redis' ) ) {
 				$this->redis = new \Redis();
@@ -56,7 +56,7 @@ class Redis_Queue_Manager {
 
 			if ( $this->connected ) {
 				if ( function_exists( 'do_action' ) ) {
-					\do_action( 'redis_queue_demo_connected', $this );
+					\do_action( 'redis_queue_connected', $this );
 				}
 			}
 			return $this->connected;
@@ -102,7 +102,7 @@ class Redis_Queue_Manager {
 				$this->redis->zadd( $queue_key, $priority, json_encode( $job_data ) );
 			}
 			if ( function_exists( 'do_action' ) ) {
-				\do_action( 'redis_queue_demo_job_enqueued', $job_id, $job );
+				\do_action( 'redis_queue_job_enqueued', $job_id, $job );
 			}
 			return $job_id;
 		} catch (Exception $e) {
@@ -136,9 +136,9 @@ class Redis_Queue_Manager {
 						if ( empty( $decoded[ 'serialized_job' ][ 'class' ] ?? '' ) ) {
 							$jt       = $decoded[ 'job_type' ] ?? '';
 							$map      = [
-								'email'            => 'Soderlind\\RedisQueueDemo\\Jobs\\Email_Job',
-								'image_processing' => 'Soderlind\\RedisQueueDemo\\Jobs\\Image_Processing_Job',
-								'api_sync'         => 'Soderlind\\RedisQueueDemo\\Jobs\\API_Sync_Job',
+								'email'            => 'Soderlind\\RedisQueue\\Jobs\\Email_Job',
+								'image_processing' => 'Soderlind\\RedisQueue\\Jobs\\Image_Processing_Job',
+								'api_sync'         => 'Soderlind\\RedisQueue\\Jobs\\API_Sync_Job',
 							];
 							$inferred = $map[ strtolower( $jt ) ] ?? null;
 							if ( ! $inferred && str_contains( $jt, '\\' ) && class_exists( $jt ) ) {
@@ -157,7 +157,7 @@ class Redis_Queue_Manager {
 						}
 						$this->update_job_status( $decoded[ 'job_id' ], 'processing' );
 						if ( function_exists( 'do_action' ) ) {
-							\do_action( 'redis_queue_demo_job_dequeued', $decoded );
+							\do_action( 'redis_queue_job_dequeued', $decoded );
 						}
 						return $decoded;
 					}
@@ -216,7 +216,7 @@ class Redis_Queue_Manager {
 			$queue_key = $this->get_queue_key( $queue_name );
 			$result    = $this->redis->del( $queue_key );
 			if ( function_exists( 'do_action' ) ) {
-				\do_action( 'redis_queue_demo_queue_cleared', $queue_name );
+				\do_action( 'redis_queue_queue_cleared', $queue_name );
 			}
 			return $result > 0;
 		} catch (Exception $e) {
@@ -267,9 +267,9 @@ class Redis_Queue_Manager {
 			$pattern = $this->queue_prefix . 'queue:*';
 			$keys    = $this->redis->keys( $pattern );
 			$map     = [
-				'email'            => 'Soderlind\\RedisQueueDemo\\Jobs\\Email_Job',
-				'image_processing' => 'Soderlind\\RedisQueueDemo\\Jobs\\Image_Processing_Job',
-				'api_sync'         => 'Soderlind\\RedisQueueDemo\\Jobs\\API_Sync_Job',
+				'email'            => 'Soderlind\\RedisQueue\\Jobs\\Email_Job',
+				'image_processing' => 'Soderlind\\RedisQueue\\Jobs\\Image_Processing_Job',
+				'api_sync'         => 'Soderlind\\RedisQueue\\Jobs\\API_Sync_Job',
 			];
 			$fixed   = 0;
 			$removed = 0;

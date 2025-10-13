@@ -113,7 +113,7 @@ class Sync_Worker {
 		 * @param array       $queues   Queue names.
 		 * @param int         $max_jobs Maximum jobs to process.
 		 */
-		do_action( 'redis_queue_demo_worker_start', $this, $queues, $max_jobs );
+		do_action( 'redis_queue_worker_start', $this, $queues, $max_jobs );
 
 		try {
 			$results = $this->job_processor->process_jobs( $queues, $max_jobs );
@@ -138,7 +138,7 @@ class Sync_Worker {
 			 * @param Sync_Worker $worker  Worker instance.
 			 * @param array       $results Processing results.
 			 */
-			do_action( 'redis_queue_demo_worker_complete', $this, $results );
+			do_action( 'redis_queue_worker_complete', $this, $results );
 
 			return array(
 				'success'      => true,
@@ -159,7 +159,7 @@ class Sync_Worker {
 			 * @param Sync_Worker $worker    Worker instance.
 			 * @param Exception   $exception Exception that occurred.
 			 */
-			do_action( 'redis_queue_demo_worker_error', $this, $e );
+			do_action( 'redis_queue_worker_error', $this, $e );
 
 			return array(
 				'success' => false,
@@ -220,9 +220,9 @@ class Sync_Worker {
 			$job_type = $job_data[ 'job_type' ];
 			// Infer class similar to namespaced worker.
 			$map       = array(
-				'email'            => 'Soderlind\\RedisQueueDemo\\Jobs\\Email_Job',
-				'image_processing' => 'Soderlind\\RedisQueueDemo\\Jobs\\Image_Processing_Job',
-				'api_sync'         => 'Soderlind\\RedisQueueDemo\\Jobs\\API_Sync_Job',
+				'email'            => 'Soderlind\\RedisQueue\\Jobs\\Email_Job',
+				'image_processing' => 'Soderlind\\RedisQueue\\Jobs\\Image_Processing_Job',
+				'api_sync'         => 'Soderlind\\RedisQueue\\Jobs\\API_Sync_Job',
 			);
 			$job_class = null;
 			if ( isset( $map[ $job_type ] ) ) {
@@ -392,9 +392,9 @@ class Sync_Worker {
 	 */
 	private function parse_config( $config ) {
 		$defaults = array(
-			'max_jobs_per_run'    => redis_queue_demo()->get_option( 'max_jobs_per_run', 10 ),
+			'max_jobs_per_run'    => redis_queue()->get_option( 'max_jobs_per_run', 10 ),
 			'memory_limit'        => ini_get( 'memory_limit' ),
-			'max_execution_time'  => redis_queue_demo()->get_option( 'worker_timeout', 300 ),
+			'max_execution_time'  => redis_queue()->get_option( 'worker_timeout', 300 ),
 			'sleep_interval'      => 1, // Seconds between queue checks (not used in sync worker).
 			'retry_failed_jobs'   => true,
 			'cleanup_on_shutdown' => true,
@@ -480,7 +480,7 @@ class Sync_Worker {
 			 * @since 1.0.0
 			 * @param Sync_Worker $worker Worker instance.
 			 */
-			do_action( 'redis_queue_demo_worker_shutdown', $this );
+			do_action( 'redis_queue_worker_shutdown', $this );
 		}
 	}
 }

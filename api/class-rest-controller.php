@@ -280,7 +280,7 @@ class REST_Controller {
 		if ( ! $job ) {
 			return new WP_Error(
 				'job_not_found',
-				__( 'Job not found.', 'redis-queue-demo' ),
+				__( 'Job not found.', 'redis-queue' ),
 				array( 'status' => 404 )
 			);
 		}
@@ -307,7 +307,7 @@ class REST_Controller {
 			if ( ! $job ) {
 				return new WP_Error(
 					'invalid_job_type',
-					__( 'Invalid job type specified.', 'redis-queue-demo' ),
+					__( 'Invalid job type specified.', 'redis-queue' ),
 					array( 'status' => 400 )
 				);
 			}
@@ -322,7 +322,7 @@ class REST_Controller {
 			if ( ! $job_id ) {
 				return new WP_Error(
 					'enqueue_failed',
-					__( 'Failed to enqueue job.', 'redis-queue-demo' ),
+					__( 'Failed to enqueue job.', 'redis-queue' ),
 					array( 'status' => 500 )
 				);
 			}
@@ -331,7 +331,7 @@ class REST_Controller {
 				array(
 					'success' => true,
 					'job_id'  => $job_id,
-					'message' => __( 'Job created and enqueued successfully.', 'redis-queue-demo' ),
+					'message' => __( 'Job created and enqueued successfully.', 'redis-queue' ),
 				)
 			);
 
@@ -368,7 +368,7 @@ class REST_Controller {
 		if ( ! $job ) {
 			return new WP_Error(
 				'job_not_found_or_not_cancellable',
-				__( 'Job not found or cannot be cancelled.', 'redis-queue-demo' ),
+				__( 'Job not found or cannot be cancelled.', 'redis-queue' ),
 				array( 'status' => 404 )
 			);
 		}
@@ -388,7 +388,7 @@ class REST_Controller {
 		if ( false === $updated ) {
 			return new WP_Error(
 				'job_cancellation_failed',
-				__( 'Failed to cancel job.', 'redis-queue-demo' ),
+				__( 'Failed to cancel job.', 'redis-queue' ),
 				array( 'status' => 500 )
 			);
 		}
@@ -397,7 +397,7 @@ class REST_Controller {
 			array(
 				'success' => true,
 				'job_id'  => $job_id,
-				'message' => __( 'Job cancelled successfully.', 'redis-queue-demo' ),
+				'message' => __( 'Job cancelled successfully.', 'redis-queue' ),
 			)
 		);
 	}
@@ -426,7 +426,7 @@ class REST_Controller {
 					'data'    => $results,
 					'message' => sprintf(
 						/* translators: %d: number of jobs processed */
-						__( 'Worker processed %d jobs.', 'redis-queue-demo' ),
+						__( 'Worker processed %d jobs.', 'redis-queue' ),
 						$results[ 'processed' ] ?? 0
 					),
 				)
@@ -541,7 +541,7 @@ class REST_Controller {
 		if ( empty( $queue_name ) ) {
 			return new WP_Error(
 				'missing_queue_name',
-				__( 'Queue name is required.', 'redis-queue-demo' ),
+				__( 'Queue name is required.', 'redis-queue' ),
 				array( 'status' => 400 )
 			);
 		}
@@ -554,7 +554,7 @@ class REST_Controller {
 					'success' => true,
 					'message' => sprintf(
 						/* translators: %s: queue name */
-						__( 'Queue "%s" cleared successfully.', 'redis-queue-demo' ),
+						__( 'Queue "%s" cleared successfully.', 'redis-queue' ),
 						$queue_name
 					),
 				)
@@ -562,7 +562,7 @@ class REST_Controller {
 		} else {
 			return new WP_Error(
 				'queue_clear_failed',
-				__( 'Failed to clear queue.', 'redis-queue-demo' ),
+				__( 'Failed to clear queue.', 'redis-queue' ),
 				array( 'status' => 500 )
 			);
 		}
@@ -608,13 +608,13 @@ class REST_Controller {
 				$route   = $request->get_route(); // e.g. /redis-queue/v1/workers/trigger
 				$allowed = true;
 				if ( 'full' !== $scope ) {
-					$allowed_routes = apply_filters( 'redis_queue_demo_token_allowed_routes', array( '/redis-queue/v1/workers/trigger' ), $scope );
+					$allowed_routes = apply_filters( 'redis_queue_token_allowed_routes', array( '/redis-queue/v1/workers/trigger' ), $scope );
 					$allowed        = in_array( $route, $allowed_routes, true );
 				}
-				$allowed                  = apply_filters( 'redis_queue_demo_token_scope_allow', $allowed, $scope, $request );
+				$allowed                  = apply_filters( 'redis_queue_token_scope_allow', $allowed, $scope, $request );
 				$this->last_scope_allowed = $allowed;
 				if ( ! $allowed ) {
-					return new WP_Error( 'rest_forbidden_scope', __( 'Token scope does not permit this endpoint.', 'redis-queue-demo' ), array( 'status' => 403 ) );
+					return new WP_Error( 'rest_forbidden_scope', __( 'Token scope does not permit this endpoint.', 'redis-queue' ), array( 'status' => 403 ) );
 				}
 
 				// Rate limiting (only token requests).
@@ -622,7 +622,7 @@ class REST_Controller {
 					$limit_ok = $this->enforce_rate_limit( $provided, $rate_per_min );
 					if ( ! $limit_ok ) {
 						$this->last_rate_limited = true;
-						return new WP_Error( 'rate_limited', __( 'Rate limit exceeded. Try again later.', 'redis-queue-demo' ), array( 'status' => 429 ) );
+						return new WP_Error( 'rate_limited', __( 'Rate limit exceeded. Try again later.', 'redis-queue' ), array( 'status' => 429 ) );
 					}
 				}
 
@@ -631,7 +631,7 @@ class REST_Controller {
 		}
 
 		$this->last_auth_method = 'none';
-		return new WP_Error( 'rest_forbidden', __( 'You do not have permission to access this endpoint.', 'redis-queue-demo' ), array( 'status' => 403 ) );
+		return new WP_Error( 'rest_forbidden', __( 'You do not have permission to access this endpoint.', 'redis-queue' ), array( 'status' => 403 ) );
 	}
 
 	/**
@@ -643,7 +643,7 @@ class REST_Controller {
 	 * @return bool True if within limit.
 	 */
 	private function enforce_rate_limit( $token, $per_minute ) {
-		$key_root = 'redis_queue_demo_rate_' . substr( hash( 'sha256', $token ), 0, 24 );
+		$key_root = 'redis_queue_rate_' . substr( hash( 'sha256', $token ), 0, 24 );
 		$minute   = gmdate( 'YmdHi' );
 		$key      = $key_root . '_' . $minute;
 		$count    = (int) get_transient( $key );
@@ -749,7 +749,7 @@ class REST_Controller {
 		if ( ! current_user_can( 'manage_options' ) || ! wp_verify_nonce( $request->get_header( 'X-WP-Nonce' ), 'wp_rest' ) ) {
 			return new WP_Error(
 				'rest_forbidden',
-				__( 'You do not have permission to perform this action.', 'redis-queue-demo' ),
+				__( 'You do not have permission to perform this action.', 'redis-queue' ),
 				array( 'status' => 403 )
 			);
 		}
@@ -766,25 +766,25 @@ class REST_Controller {
 	private function get_collection_params() {
 		return array(
 			'page'     => array(
-				'description' => __( 'Current page of the collection.', 'redis-queue-demo' ),
+				'description' => __( 'Current page of the collection.', 'redis-queue' ),
 				'type'        => 'integer',
 				'default'     => 1,
 				'minimum'     => 1,
 			),
 			'per_page' => array(
-				'description' => __( 'Maximum number of items to be returned in result set.', 'redis-queue-demo' ),
+				'description' => __( 'Maximum number of items to be returned in result set.', 'redis-queue' ),
 				'type'        => 'integer',
 				'default'     => 10,
 				'minimum'     => 1,
 				'maximum'     => 100,
 			),
 			'status'   => array(
-				'description' => __( 'Filter jobs by status.', 'redis-queue-demo' ),
+				'description' => __( 'Filter jobs by status.', 'redis-queue' ),
 				'type'        => 'string',
 				'enum'        => array( 'queued', 'processing', 'completed', 'failed', 'cancelled' ),
 			),
 			'queue'    => array(
-				'description' => __( 'Filter jobs by queue name.', 'redis-queue-demo' ),
+				'description' => __( 'Filter jobs by queue name.', 'redis-queue' ),
 				'type'        => 'string',
 			),
 		);
@@ -799,25 +799,25 @@ class REST_Controller {
 	private function get_create_job_params() {
 		return array(
 			'type'     => array(
-				'description' => __( 'Job type.', 'redis-queue-demo' ),
+				'description' => __( 'Job type.', 'redis-queue' ),
 				'type'        => 'string',
 				'required'    => true,
 				'enum'        => array( 'email', 'image_processing', 'api_sync' ),
 			),
 			'payload'  => array(
-				'description' => __( 'Job payload data.', 'redis-queue-demo' ),
+				'description' => __( 'Job payload data.', 'redis-queue' ),
 				'type'        => 'object',
 				'default'     => array(),
 			),
 			'priority' => array(
-				'description' => __( 'Job priority (lower number = higher priority).', 'redis-queue-demo' ),
+				'description' => __( 'Job priority (lower number = higher priority).', 'redis-queue' ),
 				'type'        => 'integer',
 				'default'     => 50,
 				'minimum'     => 0,
 				'maximum'     => 100,
 			),
 			'queue'    => array(
-				'description' => __( 'Queue name.', 'redis-queue-demo' ),
+				'description' => __( 'Queue name.', 'redis-queue' ),
 				'type'        => 'string',
 				'default'     => 'default',
 			),
@@ -833,13 +833,13 @@ class REST_Controller {
 	private function get_trigger_worker_params() {
 		return array(
 			'queues'   => array(
-				'description' => __( 'Queue names to process.', 'redis-queue-demo' ),
+				'description' => __( 'Queue names to process.', 'redis-queue' ),
 				'type'        => 'array',
 				'items'       => array( 'type' => 'string' ),
 				'default'     => array( 'default' ),
 			),
 			'max_jobs' => array(
-				'description' => __( 'Maximum number of jobs to process.', 'redis-queue-demo' ),
+				'description' => __( 'Maximum number of jobs to process.', 'redis-queue' ),
 				'type'        => 'integer',
 				'default'     => 10,
 				'minimum'     => 1,

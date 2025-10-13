@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on Keep a Changelog and adheres to Semantic Versioning.
 
 
+## [1.3.0] - 2025-10-13
+### Changed
+- Renamed plugin from "Redis Queue Demo" to "Redis Queue"
+- Updated namespace from `Soderlind\RedisQueueDemo` to `Soderlind\RedisQueue`
+- Updated main class from `Redis_Queue_Demo` to `Redis_Queue`
+- Updated text domain from `redis-queue-demo` to `redis-queue`
+- Updated constants from `REDIS_QUEUE_DEMO_` prefix to `REDIS_QUEUE_` prefix
+- Updated function names (e.g., `redis_queue_demo()` to `redis_queue()`)
+- Updated action and filter hooks (e.g., `redis_queue_demo_init` to `redis_queue_init`)
+- Updated GitHub repository references to soderlind/redis-queue
+- Updated composer package name to soderlind/redis-queue
+- Updated database option names from `redis_queue_demo_` to `redis_queue_` prefix
+- Updated Redis key prefix from `redis_queue_demo:` to `redis_queue:`
+- Version bumped to 1.3.0
+
+### Breaking Changes
+- Not backward compatible with version 1.2.0 due to namespace, constant, and function name changes
+- Existing integrations using old function names, hooks, or classes will need to be updated
+
 ## [1.2.0] - 2025-10-10
 ### Removed
 - Dropped all legacy global class aliases (previous `class_alias` guards) now that backward compatibility is not required.
