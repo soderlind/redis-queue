@@ -97,7 +97,7 @@ $email_job = new Email_Job([
 $email_job->set_priority(10);
 $email_job->set_queue_name('emails');
 
-$job_id = redis_queue_demo()->get_queue_manager()->enqueue( $email_job );
+$job_id = redis_queue()->get_queue_manager()->enqueue( $email_job );
 ```
 
 ### Processing Jobs Manually
@@ -105,8 +105,8 @@ $job_id = redis_queue_demo()->get_queue_manager()->enqueue( $email_job );
 use Soderlind\RedisQueue\Workers\Sync_Worker;
 
 $worker = new Sync_Worker(
-  redis_queue_demo()->get_queue_manager(),
-  redis_queue_demo()->get_job_processor()
+  redis_queue()->get_queue_manager(),
+  redis_queue()->get_job_processor()
 );
 $results = $worker->process_jobs( [ 'default', 'emails' ], 5 );
 ```
@@ -213,7 +213,7 @@ ini_set( 'max_execution_time', 300 );
 ### Worker Scheduling
 Cron / supervisor strategies:
 ```
-* * * * * wp eval "redis_queue_demo()->process_jobs();"
+* * * * * wp eval "redis_queue()->process_jobs();"
 ```
 Consider external runners for higher throughput.
 

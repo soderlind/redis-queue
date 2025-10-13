@@ -37,7 +37,7 @@ abstract class Abstract_Base_Job implements Queue_Job {
 	}
 	public function handle_failure( $exception, $attempt ) {
 		\do_action( 'redis_queue_job_failure', $this, $exception, $attempt );
-		if ( \redis_queue_demo()->get_option( 'enable_logging', true ) ) {
+		if ( \redis_queue()->get_option( 'enable_logging', true ) ) {
 			$message = $exception instanceof Exception ? $exception->getMessage() : 'Failure result without exception';
 			\error_log( sprintf( 'Redis Queue Demo: Job %s failed on attempt %d - %s', $this->get_job_type(), $attempt, $message ) );
 		}

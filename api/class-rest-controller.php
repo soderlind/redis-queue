@@ -2,7 +2,7 @@
 /**
  * REST API Controller Class
  *
- * @package RedisQueueDemo
+ * @package RedisQueue
  * @since 1.0.0
  */
 

@@ -1,8 +1,8 @@
 <?php
 namespace Soderlind\RedisQueue\Workers;
 
-use Soderlind\RedisQueueDemo\Core\Redis_Queue_Manager;
-use Soderlind\RedisQueueDemo\Core\Job_Processor;
+use Soderlind\RedisQueue\Core\Redis_Queue_Manager;
+use Soderlind\RedisQueue\Core\Job_Processor;
 use Exception; // For catch blocks.
 use Throwable; // PHP 7+/8+ throwable base.
 
@@ -232,9 +232,9 @@ class Sync_Worker {
 
 	private function parse_config( $config ) {
 		$defaults                       = [
-			'max_jobs_per_run'    => \redis_queue_demo()->get_option( 'max_jobs_per_run', 10 ),
+			'max_jobs_per_run'    => \redis_queue()->get_option( 'max_jobs_per_run', 10 ),
 			'memory_limit'        => ini_get( 'memory_limit' ),
-			'max_execution_time'  => \redis_queue_demo()->get_option( 'worker_timeout', 300 ),
+			'max_execution_time'  => \redis_queue()->get_option( 'worker_timeout', 300 ),
 			'sleep_interval'      => 1,
 			'retry_failed_jobs'   => true,
 			'cleanup_on_shutdown' => true,

@@ -35,15 +35,15 @@ Request logging (if enabled) rotates by size:
 Potential future cron to purge directly:
 ```php
 // Sketch example
-add_action( 'redis_queue_demo_maintenance', function() {
+add_action( 'redis_queue_maintenance', function() {
   global $wpdb; $t = $wpdb->prefix . 'redis_queue_jobs';
   $wpdb->query( $wpdb->prepare("DELETE FROM $t WHERE status='completed' AND created_at < %s", gmdate('Y-m-d H:i:s', time()-7*DAY_IN_SECONDS) ) );
 });
 ```
 Schedule with:
 ```php
-if ( ! wp_next_scheduled( 'redis_queue_demo_maintenance' ) ) {
-  wp_schedule_event( time()+300, 'hourly', 'redis_queue_demo_maintenance' );
+if ( ! wp_next_scheduled( 'redis_queue_maintenance' ) ) {
+  wp_schedule_event( time()+300, 'hourly', 'redis_queue_maintenance' );
 }
 ```
 

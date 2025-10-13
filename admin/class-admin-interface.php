@@ -2,7 +2,7 @@
 /**
  * Admin Interface Class
  *
- * @package RedisQueueDemo
+ * @package RedisQueue
  * @since 1.0.0
  */
 
@@ -982,7 +982,7 @@ class Admin_Interface {
 
 		try {
 			// Use the main plugin instance to create the job
-			$plugin = redis_queue_demo();
+			$plugin = redis_queue();
 			$job_id = $plugin->enqueue_job( $job_type, $payload, array( 'priority' => 10 ) );
 
 			if ( $job_id ) {
@@ -1033,7 +1033,7 @@ class Admin_Interface {
 		$debug_results = array();
 
 		// Test 1: Plugin initialization
-		$plugin                                      = redis_queue_demo();
+		$plugin                                      = redis_queue();
 		$debug_results[ '1. Plugin Initialization' ] = array(
 			'Queue Manager' => $plugin->queue_manager ? 'OK' : 'FAILED',
 			'Job Processor' => $plugin->job_processor ? 'OK' : 'FAILED',
