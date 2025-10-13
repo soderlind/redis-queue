@@ -1,6 +1,6 @@
 # Documentation Index
 
-Central hub for Redis Queue Demo plugin documentation.
+Central hub for Redis Queue plugin documentation.
 
 ## Guides
 

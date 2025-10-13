@@ -5,6 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on Keep a Changelog and adheres to Semantic Versioning.
 
 
+## [2.0.0] - 2025-10-13
+### Breaking Changes
+- **Plugin renamed**: "Redis Queue Demo" → "Redis Queue"
+- **Namespace changed**: `Soderlind\RedisQueueDemo` → `Soderlind\RedisQueue` across all classes
+- **Function names changed**: `redis_queue_demo_*()` → `redis_queue_*()`
+- **Filter/action names changed**: `redis_queue_demo_*` → `redis_queue_*`
+- **Text domain changed**: `redis-queue-demo` → `redis-queue`
+- **GitHub repository**: URLs updated from `redis-queue-demo` to `redis-queue`
+- **Composer package**: Will be `soderlind/redis-queue` (currently `soderlind/redis-queue-demo`)
+- **Download file name**: Changed from `redis-queue-demo.zip` to `redis-queue.zip`
+- **No backward compatibility**: Legacy class aliases and function names have been completely removed
+
+### Migration Guide
+To migrate from 1.x to 2.0.0:
+
+1. **Update namespace imports**:
+   - Old: `use Soderlind\RedisQueueDemo\Core\Redis_Queue_Manager;`
+   - New: `use Soderlind\RedisQueue\Core\Redis_Queue_Manager;`
+
+2. **Update function calls**:
+   - Old: `redis_queue_demo()`
+   - New: `redis_queue()`
+   - Old: `redis_queue_demo_create_job` filter
+   - New: `redis_queue_create_job` filter
+
+3. **Update action/filter hooks**:
+   - Old: `add_filter('redis_queue_demo_token_allowed_routes', ...)`
+   - New: `add_filter('redis_queue_token_allowed_routes', ...)`
+
+4. **Update options migration**: A one-time migration automatically renames options from `redis_queue_demo_*` to `redis_queue_*` on first activation of 2.0.0.
+
+### Changed
+- Complete documentation overhaul to reflect new plugin name and namespace
+- All code examples updated to use new function and filter names
+- REST API namespace remains `redis-queue/v1` for API stability
+
 ## [1.2.0] - 2025-10-10
 ### Removed
 - Dropped all legacy global class aliases (previous `class_alias` guards) now that backward compatibility is not required.
