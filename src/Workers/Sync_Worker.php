@@ -7,29 +7,30 @@ use Exception; // For catch blocks.
 use Throwable; // PHP 7+/8+ throwable base.
 
 /**
- * Namespaced synchronous worker.
+ * Synchronous Worker.
  *
- * This is a straight namespace wrapper of the original global Sync_Worker class.
- * Logic/behavior intentionally unchanged; UI & external integrations should continue to work.
- * Legacy global alias removed (backward compatibility dropped).
+ * Processes queued jobs synchronously in the current request.
+ * Used for CLI workers, cron jobs, and manual triggering.
+ * Tracks statistics and provides hooks for monitoring.
  *
  * @since 1.0.0 (legacy)
  * @since 1.1.0 Namespaced
+ * @since 2.0.0 Renamed namespace
  */
 class Sync_Worker {
-	/** @var Redis_Queue_Manager */
+	/** @var Redis_Queue_Manager Queue manager instance. */
 	private $queue_manager;
 
-	/** @var Job_Processor */
+	/** @var Job_Processor Job processor instance. */
 	private $job_processor;
 
-	/** @var array */
+	/** @var array Worker configuration. */
 	private $config;
 
-	/** @var string */
+	/** @var string Current worker state. */
 	private $state = 'idle';
 
-	/** @var array */
+	/** @var array Worker statistics. */
 	private $stats = [
 		'jobs_processed' => 0,
 		'jobs_failed'    => 0,
@@ -38,6 +39,13 @@ class Sync_Worker {
 		'last_activity'  => null,
 	];
 
+	/**
+	 * Constructor.
+	 * 
+	 * @param Redis_Queue_Manager $queue_manager Queue manager instance.
+	 * @param Job_Processor       $job_processor Job processor instance.
+	 * @param array               $config        Optional worker configuration.
+	 */
 	public function __construct( Redis_Queue_Manager $queue_manager, Job_Processor $job_processor, $config = [] ) {
 		$this->queue_manager         = $queue_manager;
 		$this->job_processor         = $job_processor;
@@ -45,18 +53,34 @@ class Sync_Worker {
 		$this->stats[ 'start_time' ] = microtime( true );
 	}
 
+	/**
+	 * Process jobs from specified queues.
+	 * Continues processing until max_jobs reached or no more jobs available.
+	 * 
+	 * @param array    $queues   Queue names to process from.
+	 * @param int|null $max_jobs Maximum number of jobs to process. If null, uses config value.
+	 * @return array Processing results with statistics.
+	 */
 	public function process_jobs( $queues = [ 'default' ], $max_jobs = null ) {
+		// Check Redis connection availability.
 		if ( ! $this->queue_manager->is_connected() ) {
 			return [ 'success' => false, 'error' => 'Redis connection not available' ];
 		}
+		
+		// Update worker state.
 		$this->state                    = 'working';
 		$this->stats[ 'last_activity' ] = microtime( true );
+		
+		// Use configured max_jobs if not specified.
 		if ( null === $max_jobs ) {
 			$max_jobs = $this->config[ 'max_jobs_per_run' ];
 		}
+		
+		// Fire worker start actions.
 		function_exists( '\do_action' ) && \do_action( 'redis_queue_worker_start', $this, $queues, $max_jobs );
-		function_exists( '\do_action' ) && \do_action( 'redis_queue_worker_start', $this, $queues, $max_jobs );
+		
 		try {
+			// Process jobs via job processor.
 			$results                         = $this->job_processor->process_jobs( $queues, $max_jobs );
 			$this->stats[ 'jobs_processed' ] += $results[ 'processed' ];
 			$this->stats[ 'total_time' ] += $results[ 'total_time' ];
