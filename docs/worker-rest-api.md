@@ -335,7 +335,7 @@ If token scope is worker-only and you call a disallowed endpoint:
 
 ---
 ## Logging & Rotation
-When enabled, logs are written to: `wp-content/uploads/redis-queue-demo-logs/requests.log`
+When enabled, logs are written to: `wp-content/uploads/redis-queue-logs/requests.log`
 Rotation occurs when the file exceeds the configured size (KB). Old logs are named `requests-YYYYmmdd-HHMMSS.log`. The oldest rotated files are pruned beyond the configured maximum count.
 
 Log line sample (JSON):

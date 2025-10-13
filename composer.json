@@ -1,7 +1,7 @@
 {
-	"name": "soderlind/redis-queue-demo",
+	"name": "soderlind/redis-queue",
 	"description": "Redis-backed prioritized, delayed & retryable background jobs for WordPress (token auth, rate limiting, logging)",
-	"homepage": "https://github.com/soderlind/redis-queue-demo",
+	"homepage": "https://github.com/soderlind/redis-queue",
 	"type": "wordpress-plugin",
 	"license": "GPL-2.0-or-later",
 	"authors": [
@@ -24,7 +24,7 @@
 		"scaling"
 	],
 	"support": {
-		"issues": "https://github.com/soderlind/redis-queue-demo/issues"
+		"issues": "https://github.com/soderlind/redis-queue/issues"
 	},
 	"require": {
 		"yahnis-elsts/plugin-update-checker": "^5.6"
