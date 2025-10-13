@@ -497,7 +497,7 @@ class REST_Controller {
 			),
 			'php_version'       => PHP_VERSION,
 			'wordpress_version' => get_bloginfo( 'version' ),
-			'plugin_version'    => REDIS_QUEUE_DEMO_VERSION,
+			'plugin_version'    => REDIS_QUEUE_VERSION,
 		);
 
 		// Get Redis info if connected.

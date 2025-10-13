@@ -47,7 +47,7 @@ class Admin_Interface {
 		if ( false === strpos( $hook_suffix, 'redis-queue' ) ) {
 			return;
 		}
-		\wp_enqueue_script( 'redis-queue-admin', \plugin_dir_url( __FILE__ ) . '../../assets/admin.js', [ 'jquery' ], REDIS_QUEUE_DEMO_VERSION, true );
+		\wp_enqueue_script( 'redis-queue-admin', \plugin_dir_url( __FILE__ ) . '../../assets/admin.js', [ 'jquery' ], REDIS_QUEUE_VERSION, true );
 		\wp_localize_script( 'redis-queue-admin', 'redisQueueAdmin', [
 			'ajaxUrl'   => \admin_url( 'admin-ajax.php' ),
 			'nonce'     => \wp_create_nonce( 'redis_queue_admin' ),
@@ -62,7 +62,7 @@ class Admin_Interface {
 				'queueCleared'    => __( 'Queue cleared successfully', 'redis-queue' ),
 			],
 		] );
-		\wp_enqueue_style( 'redis-queue-admin', \plugin_dir_url( __FILE__ ) . '../../assets/admin.css', [], REDIS_QUEUE_DEMO_VERSION );
+		\wp_enqueue_style( 'redis-queue-admin', \plugin_dir_url( __FILE__ ) . '../../assets/admin.css', [], REDIS_QUEUE_VERSION );
 	}
 
 	// The following render methods replicate legacy output exactly.

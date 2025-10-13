@@ -135,7 +135,7 @@ class Admin_Interface {
 			'redis-queue-admin',
 			plugin_dir_url( __FILE__ ) . '../assets/admin.js',
 			array( 'jquery' ),
-			REDIS_QUEUE_DEMO_VERSION,
+			REDIS_QUEUE_VERSION,
 			true
 		);
 
@@ -162,7 +162,7 @@ class Admin_Interface {
 			'redis-queue-admin',
 			plugin_dir_url( __FILE__ ) . '../assets/admin.css',
 			array(),
-			REDIS_QUEUE_DEMO_VERSION
+			REDIS_QUEUE_VERSION
 		);
 	}
 

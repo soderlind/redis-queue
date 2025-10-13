@@ -172,7 +172,7 @@ class REST_Controller {
 			'memory_usage'      => [ 'current' => memory_get_usage( true ), 'peak' => memory_get_peak_usage( true ), 'limit' => ini_get( 'memory_limit' ) ],
 			'php_version'       => PHP_VERSION,
 			'wordpress_version' => get_bloginfo( 'version' ),
-			'plugin_version'    => \defined( 'REDIS_QUEUE_DEMO_VERSION' ) ? REDIS_QUEUE_DEMO_VERSION : 'unknown',
+			'plugin_version'    => \defined( 'REDIS_QUEUE_VERSION' ) ? REDIS_QUEUE_VERSION : 'unknown',
 		];
 		if ( $health[ 'redis_connected' ] ) {
 			try {
