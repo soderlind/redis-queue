@@ -1,5 +1,7 @@
 # Redis Queue for WordPress
 
+>NOTE: This is experimental, you might not need it :bowtie:
+
 Robust Redis-backed background job processing for WordPress. Provides prioritized, delayed, and retryable jobs with an admin UI, REST API, token-based auth (scopes + rate limiting), and extensibility for custom job types.
 
 A production-ready queue system for WordPress, following best practices and patterns.
