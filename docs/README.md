@@ -128,6 +128,7 @@ Potential future doc: `security-hardening.md` (advanced token rotation, audit ag
 | Overview & Root README | Feature overview, installation basics | [Root README](../README.md) |
 | Usage & Operations | Admin UI, job lifecycle, troubleshooting | [Usage](usage.md) |
 | Extending Jobs | Build custom job classes & best practices | [Extending Jobs](extending-jobs.md) |
+| Filters Reference | All available plugin filters (hooks) | [Filters](filters.md) |
 | REST API Reference | Endpoints, auth (scopes, rate limit), logging | [REST API](worker-rest-api.md) |
 | Scaling Strategies | Horizontal + segmentation + backpressure | [Scaling](scaling.md) |
 | Maintenance & Operations | Purging, stuck jobs, logs, DR | [Maintenance](maintenance.md) |

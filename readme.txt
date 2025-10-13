@@ -5,7 +5,7 @@ Tags: redis, queue, background, jobs, performance
 Requires at least: 6.7
 Tested up to: 6.8
 Requires PHP: 8.3
-Stable tag: 2.0.0
+Stable tag: 2.0.1
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -102,6 +102,12 @@ The plugin includes fallback mechanisms and graceful error handling. Jobs will f
 
 == Changelog ==
 
+= 2.0.1 =
+* Added: Filter `redis_queue_show_test_jobs_page` to optionally hide the Test Jobs admin page (useful on production).
+* Added: New documentation file `docs/filters.md` enumerating all available filters.
+* Changed: Defensive access guard when page is disabled.
+* Note: Non-breaking refinement over 2.0.0.
+
 = 2.0.0 =
 * **BREAKING CHANGES - Major version update**
 * Plugin renamed from "Redis Queue Demo" to "Redis Queue"
@@ -157,6 +163,9 @@ The plugin includes fallback mechanisms and graceful error handling. Jobs will f
 * WordPress 6.7+ and PHP 8.3+ compatibility
 
 == Upgrade Notice ==
+
+= 2.0.1 =
+Adds filter to disable Test Jobs page in production and introduces a filters reference doc (`docs/filters.md`).
 
 = 2.0.0 =
 MAJOR BREAKING CHANGES: Plugin renamed to "Redis Queue". Namespace, function names, and hooks all changed. Review migration guide in CHANGELOG.md before upgrading. No automatic backward compatibility.

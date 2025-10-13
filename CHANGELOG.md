@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog and adheres to Semantic Versioning.
 
+## [2.0.1] - 2025-10-14
+### Added
+- Filter `redis_queue_show_test_jobs_page` lets administrators (or site integrators) hide the "Test Jobs" admin submenu/page in production or restricted environments.
+- Documentation: New `docs/filters.md` reference listing all public plugin filters with signatures & examples.
+
+### Changed
+- Minor defensive check added to prevent direct access to the Test Jobs page when disabled by filter.
+
+### Notes
+- This is a non-breaking incremental release over 2.0.0 focused on admin customization.
+ - Added dedicated Filters Reference doc for easier extensibility.
+
+
 
 ## [2.0.0] - 2025-10-13
 ### Breaking Changes

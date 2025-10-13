@@ -3,7 +3,7 @@
  * Plugin Name:       Redis Queue
  * Plugin URI:        https://github.com/soderlind/redis-queue
  * Description:       Redis-backed prioritized, delayed & retryable background jobs for WordPress (workers, REST API, admin UI).
- * Version:           2.0.0
+ * Version:           2.0.1
  * Requires at least: 6.7
  * Requires PHP:      8.3
  * Author:            Per Soderlind
@@ -20,7 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin version and requirements.
-define( 'REDIS_QUEUE_VERSION', '2.0.0' );
+define( 'REDIS_QUEUE_VERSION', '2.0.1' );
 define( 'REDIS_QUEUE_MIN_PHP', '8.3' );
 
 // Plugin file paths and URLs.
@@ -59,7 +59,7 @@ function redis_queue_migrate_options_v2() {
 		$old_key = 'redis_queue_demo_' . $suffix;
 		$new_key = 'redis_queue_' . $suffix;
 		$old_val = get_option( $old_key, null );
-		
+
 		// Only migrate if old value exists and new value doesn't exist.
 		if ( $old_val !== null && get_option( $new_key, null ) === null ) {
 			update_option( $new_key, $old_val );
@@ -83,7 +83,7 @@ if ( class_exists( 'Soderlind\RedisQueue\Core\Redis_Queue' ) ) {
 	Soderlind\RedisQueue\Core\Redis_Queue::get_instance();
 } else {
 	// Show error notice if dependencies are missing.
-	add_action( 'admin_notices', function() {
+	add_action( 'admin_notices', function () {
 		if ( current_user_can( 'activate_plugins' ) ) {
 			echo '<div class="notice notice-error"><p>';
 			echo '<strong>Redis Queue:</strong> ';
@@ -142,7 +142,7 @@ function redis_queue_process_jobs( $queue = 'default', $max_jobs = null ) {
 	if ( ! $instance || ! $instance->get_queue_manager() || ! $instance->get_job_processor() ) {
 		return false;
 	}
-	
+
 	// Create a synchronous worker and process jobs.
 	$worker = new \Soderlind\RedisQueue\Workers\Sync_Worker( $instance->get_queue_manager(), $instance->get_job_processor() );
 	return $worker->process_jobs( (array) $queue, $max_jobs );

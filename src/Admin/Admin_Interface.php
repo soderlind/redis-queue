@@ -39,7 +39,10 @@ class Admin_Interface {
 		\add_menu_page( __( 'Redis Queue', 'redis-queue' ), __( 'Redis Queue', 'redis-queue' ), 'manage_options', 'redis-queue', [ $this, 'render_dashboard_page' ], 'dashicons-database-view', 30 );
 		\add_submenu_page( 'redis-queue', __( 'Dashboard', 'redis-queue' ), __( 'Dashboard', 'redis-queue' ), 'manage_options', 'redis-queue', [ $this, 'render_dashboard_page' ] );
 		\add_submenu_page( 'redis-queue', __( 'Jobs', 'redis-queue' ), __( 'Jobs', 'redis-queue' ), 'manage_options', 'redis-queue-jobs', [ $this, 'render_jobs_page' ] );
-		\add_submenu_page( 'redis-queue', __( 'Test Jobs', 'redis-queue' ), __( 'Test Jobs', 'redis-queue' ), 'manage_options', 'redis-queue-test', [ $this, 'render_test_page' ] );
+		// Allow integrators to hide the Test Jobs page (e.g., production hardening) via filter.
+		if ( \apply_filters( 'redis_queue_show_test_jobs_page', true ) ) {
+			\add_submenu_page( 'redis-queue', __( 'Test Jobs', 'redis-queue' ), __( 'Test Jobs', 'redis-queue' ), 'manage_options', 'redis-queue-test', [ $this, 'render_test_page' ] );
+		}
 		\add_submenu_page( 'redis-queue', __( 'Settings', 'redis-queue' ), __( 'Settings', 'redis-queue' ), 'manage_options', 'redis-queue-settings', [ $this, 'render_settings_page' ] );
 	}
 
@@ -104,6 +107,10 @@ class Admin_Interface {
 		include __DIR__ . '/partials/jobs-inline.php';
 	}
 	public function render_test_page() {
+		// Defensive: if hidden after initial menu build, block access.
+		if ( ! \apply_filters( 'redis_queue_show_test_jobs_page', true ) ) {
+			\wp_die( esc_html__( 'The Test Jobs page has been disabled by configuration.', 'redis-queue' ) );
+		}
 		include __DIR__ . '/partials/test-inline.php';
 	}
 	public function render_settings_page() {
