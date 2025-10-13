@@ -123,7 +123,7 @@ class Email_Job extends Abstract_Base_Job {
 	public function handle_failure( $exception, $attempt ) {
 		parent::handle_failure( $exception, $attempt );
 		$email_type = $this->get_payload_value( 'type', 'single' );
-		\do_action( 'redis_queue_demo_email_job_failed', $this, $exception, $attempt, $email_type );
+		\do_action( 'redis_queue_email_job_failed', $this, $exception, $attempt, $email_type );
 	}
 	public function should_retry( $exception, $attempt ) {
 		if ( $exception instanceof Exception && str_contains( $exception->getMessage(), 'Invalid email' ) ) {

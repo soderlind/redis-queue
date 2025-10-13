@@ -54,7 +54,7 @@ class Sync_Worker {
 		if ( null === $max_jobs ) {
 			$max_jobs = $this->config[ 'max_jobs_per_run' ];
 		}
-		function_exists( '\do_action' ) && \do_action( 'redis_queue_demo_worker_start', $this, $queues, $max_jobs );
+		function_exists( '\do_action' ) && \do_action( 'redis_queue_worker_start', $this, $queues, $max_jobs );
 		function_exists( '\do_action' ) && \do_action( 'redis_queue_worker_start', $this, $queues, $max_jobs );
 		try {
 			$results                         = $this->job_processor->process_jobs( $queues, $max_jobs );
@@ -66,7 +66,7 @@ class Sync_Worker {
 				}
 			}
 			$this->state = 'idle';
-			function_exists( '\do_action' ) && \do_action( 'redis_queue_demo_worker_complete', $this, $results );
+			function_exists( '\do_action' ) && \do_action( 'redis_queue_worker_complete', $this, $results );
 			function_exists( '\do_action' ) && \do_action( 'redis_queue_worker_complete', $this, $results );
 			return [
 				'success'      => true,
@@ -78,7 +78,7 @@ class Sync_Worker {
 			];
 		} catch (Exception $e) {
 			$this->state = 'error';
-			function_exists( '\do_action' ) && \do_action( 'redis_queue_demo_worker_error', $this, $e );
+			function_exists( '\do_action' ) && \do_action( 'redis_queue_worker_error', $this, $e );
 			function_exists( '\do_action' ) && \do_action( 'redis_queue_worker_error', $this, $e );
 			return [ 'success' => false, 'error' => $e ? $e->getMessage() : 'Unknown error occurred', 'code' => $e ? $e->getCode() : 0 ];
 		} catch (Throwable $e) {
@@ -284,7 +284,7 @@ class Sync_Worker {
 
 	public function __destruct() {
 		if ( $this->config[ 'cleanup_on_shutdown' ] ) {
-			function_exists( '\do_action' ) && \do_action( 'redis_queue_demo_worker_shutdown', $this );
+			function_exists( '\do_action' ) && \do_action( 'redis_queue_worker_shutdown', $this );
 		}
 	}
 }

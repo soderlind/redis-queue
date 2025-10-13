@@ -210,7 +210,7 @@ class Admin_Interface {
 		$payload  = $_POST[ 'payload' ] ?? [];
 		$payload  = is_array( $payload ) ? array_map( 'sanitize_text_field', $payload ) : [];
 		try {
-			$job_id = redis_queue_demo()->enqueue_job( $job_type, $payload, [ 'priority' => 10 ] );
+			$job_id = redis_queue()->enqueue_job( $job_type, $payload, [ 'priority' => 10 ] );
 			if ( $job_id ) {
 				wp_send_json_success( [ 'job_id' => $job_id, 'message' => 'Job created and enqueued successfully.' ] );
 			} else {
@@ -237,7 +237,7 @@ class Admin_Interface {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_die( -1 );
 		}
-		$plugin  = redis_queue_demo();
+		$plugin  = redis_queue();
 		$results = [ 'plugin' => [ 'Queue Manager' => $plugin->queue_manager ? 'OK' : 'FAILED', 'Job Processor' => $plugin->job_processor ? 'OK' : 'FAILED' ], 'redis' => [ 'Connected' => $plugin->queue_manager->is_connected() ? 'YES' : 'NO' ] ];
 		wp_send_json_success( $results );
 	}

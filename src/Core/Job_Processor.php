@@ -224,7 +224,7 @@ class Job_Processor {
 		$this->queue_manager->enqueue( $job, $delay );
 		$this->queue_manager->update_job_status( $job_id, 'queued' );
 		if ( function_exists( 'do_action' ) ) {
-			\do_action( 'redis_queue_demo_job_retried', $job_id, $job, $attempt, $delay );
+			\do_action( 'redis_queue_job_retried', $job_id, $job, $attempt, $delay );
 		}
 	}
 	private function mark_job_failed( $job_id, Job_Result $result ): void {
@@ -232,7 +232,7 @@ class Job_Processor {
 		$table = $wpdb->prefix . 'redis_queue_jobs';
 		$wpdb->update( $table, [ 'status' => 'failed', 'result' => ( function_exists( 'wp_json_encode' ) ? \wp_json_encode( $result->to_array() ) : json_encode( $result->to_array() ) ), 'error_message' => $result->get_error_message(), 'failed_at' => ( function_exists( 'current_time' ) ? \current_time( 'mysql' ) : date( 'Y-m-d H:i:s' ) ), 'updated_at' => ( function_exists( 'current_time' ) ? \current_time( 'mysql' ) : date( 'Y-m-d H:i:s' ) ) ], [ 'job_id' => $job_id ], [ '%s', '%s', '%s', '%s', '%s' ], [ '%s' ] );
 		if ( function_exists( 'do_action' ) ) {
-			\do_action( 'redis_queue_demo_job_permanently_failed', $job_id, $result );
+			\do_action( 'redis_queue_job_permanently_failed', $job_id, $result );
 		}
 	}
 	private function should_stop_processing(): bool {
