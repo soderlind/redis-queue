@@ -1,9 +1,28 @@
-/* Redis Queue Demo Admin JavaScript */
+/**
+ * Redis Queue Admin JavaScript
+ * 
+ * Handles all admin interface interactions including:
+ * - Dashboard statistics and monitoring
+ * - Job management (view, cancel, purge)
+ * - Test job submission
+ * - Redis connection testing
+ * - Worker triggering
+ * - Diagnostics and debugging
+ * 
+ * @package RedisQueue
+ * @since 2.0.0
+ */
 (function($) {
     'use strict';
 
-    // Main admin object
+    /**
+     * Main admin object containing all admin interface functionality.
+     */
     var RedisQueueAdmin = {
+        /**
+         * Initialize the admin interface.
+         * Sets up event bindings and initializes page-specific features.
+         */
         init: function() {
             this.bindEvents();
             this.initDashboard();
@@ -11,6 +30,10 @@
             this.initSettings();
         },
 
+        /**
+         * Bind event handlers to UI elements.
+         * Uses event delegation for dynamically added elements.
+         */
         bindEvents: function() {
             // Dashboard events
             $(document).on('click', '#trigger-worker', this.triggerWorker);
@@ -18,6 +41,7 @@
             $(document).on('click', '#run-diagnostics', this.runDiagnostics);
             $(document).on('click', '#debug-test', this.runDebugTest);
             $(document).on('click', '#reset-stuck-jobs', this.resetStuckJobs);
+            
             // Purge events
             $(document).on('click', '.purge-buttons button', this.purgeJobs);
             
@@ -32,6 +56,10 @@
             $(document).on('click', '#test-redis-connection', this.testConnection);
         },
 
+        /**
+         * Initialize dashboard functionality.
+         * Sets up auto-refresh for job statistics.
+         */
         initDashboard: function() {
             // Auto-refresh stats every 30 seconds if on dashboard
             if ($('#queued-jobs').length) {
@@ -40,6 +68,10 @@
             }
         },
 
+        /**
+         * Initialize test job forms.
+         * Binds submit handlers to prevent default form submission.
+         */
         initTestForms: function() {
             // Initialize test forms
             $('.test-job-form').each(function() {
@@ -51,6 +83,10 @@
             });
         },
 
+        /**
+         * Initialize settings page features.
+         * Auto-tests Redis connection on page load.
+         */
         initSettings: function() {
             // Initialize settings page
             if ($('#test-redis-connection').length) {
@@ -59,12 +95,19 @@
             }
         },
 
+        /**
+         * Trigger the worker to process queued jobs.
+         * Sends AJAX request to process jobs and displays results.
+         * 
+         * @param {Event} e Click event
+         */
         triggerWorker: function(e) {
             e.preventDefault();
             
             var $button = $(this);
             var originalText = $button.text();
             
+            // Disable button during processing
             $button.prop('disabled', true).text(redisQueueAdmin.strings.processing);
             
             $.ajax({
@@ -79,7 +122,7 @@
                         RedisQueueAdmin.showNotice(redisQueueAdmin.strings.workerTriggered, 'success');
                         RedisQueueAdmin.refreshStats();
                         
-                        // Show processing details
+                        // Show processing details in console
                         if (response.data) {
                             var details = 'Processed: ' + (response.data.processed || 0) + ' jobs\n' +
                                          'Success: ' + (response.data.successful || 0) + '\n' +
@@ -94,11 +137,18 @@
                     RedisQueueAdmin.showNotice(redisQueueAdmin.strings.error, 'error');
                 },
                 complete: function() {
+                    // Re-enable button
                     $button.prop('disabled', false).text(originalText);
                 }
             });
         },
 
+        /**
+         * Refresh dashboard statistics.
+         * Updates job counts (queued, processing, completed, failed).
+         * 
+         * @param {Event} [e] Optional click event
+         */
         refreshStats: function(e) {
             if (e) e.preventDefault();
             
@@ -111,6 +161,7 @@
                 },
                 success: function(response) {
                     if (response.success && response.data) {
+                        // Update job count displays
                         $('#queued-jobs').text(response.data.queued || 0);
                         $('#processing-jobs').text(response.data.processing || 0);
                         $('#completed-jobs').text(response.data.completed || 0);
@@ -123,6 +174,12 @@
             });
         },
 
+        /**
+         * Run Redis diagnostics.
+         * Tests connection, read/write operations, and displays Redis state.
+         * 
+         * @param {Event} e Click event
+         */
         runDiagnostics: function(e) {
             if (e) e.preventDefault();
             
@@ -151,9 +208,13 @@
                         html += '<li><strong>Test Read:</strong> ' + (diagnostics.test_read ? 'Success' : 'Failed') + '</li>';
                         html += '<li><strong>Queue Prefix:</strong> ' + diagnostics.queue_prefix + '</li>';
                         html += '<li><strong>Redis Keys Found:</strong> ' + (diagnostics.redis_keys ? diagnostics.redis_keys.length : 0) + '</li>';
+                        
+                        // Display Redis keys if found
                         if (diagnostics.redis_keys && diagnostics.redis_keys.length > 0) {
                             html += '<li><strong>Keys:</strong> ' + diagnostics.redis_keys.join(', ') + '</li>';
                         }
+                        
+                        // Display any errors
                         if (diagnostics.error) {
                             html += '<li><strong>Error:</strong> ' + diagnostics.error + '</li>';
                         }
@@ -170,6 +231,12 @@
             });
         },
 
+        /**
+         * Run comprehensive debug test.
+         * Performs detailed analysis of plugin configuration and state.
+         * 
+         * @param {Event} e Click event
+         */
         runDebugTest: function(e) {
             if (e) e.preventDefault();
             
@@ -245,6 +312,12 @@
             });
         },
 
+        /**
+         * Reset stuck jobs.
+         * Resets jobs that are stuck in "processing" state back to "queued".
+         * 
+         * @param {Event} e Click event
+         */
         resetStuckJobs: function(e) {
             if (e) e.preventDefault();
             
@@ -266,7 +339,7 @@
                     
                     if (response.success && response.data) {
                         $result.html('<div class="notice notice-success"><p>' + response.data.message + '</p></div>');
-                        // Refresh stats if available
+                        // Refresh stats to show updated counts
                         if (typeof RedisQueueAdmin.refreshStats === 'function') {
                             RedisQueueAdmin.refreshStats();
                         }
@@ -281,6 +354,12 @@
             });
         },
 
+        /**
+         * Purge jobs from the database.
+         * Supports purging completed, failed, older, or all jobs.
+         * 
+         * @param {Event} e Click event
+         */
         purgeJobs: function(e) {
             e.preventDefault();
             var $button = $(this);
@@ -289,6 +368,7 @@
 
             if (!scope) return;
 
+            // Build appropriate confirmation message based on scope
             var confirmMsg = 'Are you sure you want to purge ' + scope + ' jobs?';
             if (scope === 'all') {
                 confirmMsg = 'DANGER: This will delete ALL jobs. Continue?';
@@ -314,6 +394,7 @@
                 success: function(response) {
                     if (response.success && response.data) {
                         $result.html('<div class="notice notice-success"><p>' + response.data.message + '</p></div>');
+                        // Refresh stats to reflect purged jobs
                         if (typeof RedisQueueAdmin.refreshStats === 'function') {
                             RedisQueueAdmin.refreshStats();
                         }
@@ -330,12 +411,18 @@
             });
         },
 
+        /**
+         * View detailed information about a specific job.
+         * Opens a modal with job details loaded via REST API.
+         * 
+         * @param {Event} e Click event
+         */
         viewJob: function(e) {
             e.preventDefault();
             
             var jobId = $(this).data('job-id');
             
-            // Create modal or use WordPress media modal
+            // Create and display modal
             var modal = $('<div class="redis-queue-modal">' +
                 '<div class="modal-content">' +
                 '<span class="close">&times;</span>' +
@@ -347,11 +434,12 @@
             $('body').append(modal);
             modal.show();
             
-            // Close modal events
+            // Close modal on X button click
             modal.find('.close').on('click', function() {
                 modal.remove();
             });
             
+            // Close modal on background click
             $(window).on('click', function(event) {
                 if (event.target === modal[0]) {
                     modal.remove();
@@ -366,6 +454,7 @@
                     xhr.setRequestHeader('X-WP-Nonce', redisQueueAdmin.restNonce);
                 },
                 success: function(response) {
+                    // Build job details table
                     var html = '<table class="job-details-table">';
                     html += '<tr><td><strong>ID:</strong></td><td>' + response.id + '</td></tr>';
                     html += '<tr><td><strong>Type:</strong></td><td>' + response.type + '</td></tr>';
@@ -375,14 +464,17 @@
                     html += '<tr><td><strong>Attempts:</strong></td><td>' + response.attempts + '/' + response.max_attempts + '</td></tr>';
                     html += '<tr><td><strong>Created:</strong></td><td>' + response.created_at + '</td></tr>';
                     
+                    // Show payload if present
                     if (response.payload) {
                         html += '<tr><td><strong>Payload:</strong></td><td><pre>' + JSON.stringify(response.payload, null, 2) + '</pre></td></tr>';
                     }
                     
+                    // Show result if present
                     if (response.result) {
                         html += '<tr><td><strong>Result:</strong></td><td><pre>' + JSON.stringify(response.result, null, 2) + '</pre></td></tr>';
                     }
                     
+                    // Show error if present
                     if (response.error_message) {
                         html += '<tr><td><strong>Error:</strong></td><td class="error-message">' + response.error_message + '</td></tr>';
                     }
@@ -397,6 +489,12 @@
             });
         },
 
+        /**
+         * Cancel a job.
+         * Removes the job from the queue via REST API.
+         * 
+         * @param {Event} e Click event
+         */
         cancelJob: function(e) {
             e.preventDefault();
             
@@ -416,6 +514,7 @@
                 },
                 success: function(response) {
                     if (response.success) {
+                        // Update UI to reflect cancelled status
                         $row.find('.status-badge').removeClass().addClass('status-badge status-cancelled').text('Cancelled');
                         $link.remove();
                         RedisQueueAdmin.showNotice('Job cancelled successfully', 'success');
@@ -429,6 +528,12 @@
             });
         },
 
+        /**
+         * Clear all jobs from a queue.
+         * Removes all jobs from the specified queue (default: 'default').
+         * 
+         * @param {Event} e Click event
+         */
         clearQueue: function(e) {
             e.preventDefault();
             
@@ -455,7 +560,7 @@
                     if (response.success) {
                         RedisQueueAdmin.showNotice(redisQueueAdmin.strings.queueCleared, 'success');
                         RedisQueueAdmin.refreshStats();
-                        location.reload(); // Refresh the jobs list
+                        location.reload(); // Refresh to show empty queue
                     } else {
                         RedisQueueAdmin.showNotice(response.data || redisQueueAdmin.strings.error, 'error');
                     }
@@ -469,6 +574,13 @@
             });
         },
 
+        /**
+         * Submit a test job.
+         * Creates a test job via REST API with form data.
+         * Implements fade animation for user feedback.
+         * 
+         * @param {Event} e Submit event
+         */
         submitTestJob: function(e) {
             e.preventDefault();
             
@@ -476,7 +588,7 @@
             var $submitButton = $form.find('button[type="submit"]');
             var originalText = $submitButton.text();
             var startTime = Date.now();
-            var MIN_PROCESSING_MS = 700; // ensure user perceives processing state
+            var MIN_PROCESSING_MS = 700; // Ensure user perceives processing state
             
             // Prevent double submission
             if ($submitButton.prop('disabled')) {
@@ -484,11 +596,12 @@
                 return;
             }
             
+            // Update button state with fade animation
             $submitButton.prop('disabled', true).addClass('loading').text(redisQueueAdmin.strings.processing);
-            // Immediate user feedback line
+            // Provide immediate feedback
             RedisQueueAdmin.showTestResult('Submitting job request...', 'info');
             
-            // Get form data
+            // Collect form data
             var formData = {};
             $form.find('input, select, textarea').each(function() {
                 var $field = $(this);
@@ -498,7 +611,7 @@
                 }
             });
             
-            // Determine job type based on form
+            // Determine job type based on form ID
             var jobType = 'email';
             if ($form.attr('id') === 'test-image-job') {
                 jobType = 'image_processing';
@@ -506,7 +619,7 @@
                 jobType = 'api_sync';
             }
             
-            // Create job via REST API
+            // Log submission details for debugging
             console.log('Submitting job:', {
                 type: jobType,
                 payload: formData,
@@ -514,7 +627,7 @@
                 nonce: redisQueueAdmin.restNonce
             });
 
-            // Use form data instead of JSON to avoid potential content-type issues
+            // Prepare request data
             var requestData = {
                 type: jobType,
                 payload: formData,
@@ -522,6 +635,7 @@
                 queue: 'default'
             };
 
+            // Submit job via REST API
             $.ajax({
                 url: redisQueueAdmin.restUrl + 'jobs',
                 type: 'POST',
@@ -566,6 +680,12 @@
             });
         },
 
+        /**
+         * Test Redis connection.
+         * Verifies Redis connectivity via the health endpoint.
+         * 
+         * @param {Event} [e] Optional click event
+         */
         testConnection: function(e) {
             if (e) e.preventDefault();
             
@@ -576,10 +696,9 @@
                 $button.prop('disabled', true).text('Testing...');
             }
 
-            // First test if REST API is accessible
+            // Test REST API accessibility and Redis connection
             console.log('Testing REST API accessibility:', redisQueueAdmin.restUrl);
             
-            // Test Redis connection
             $.ajax({
                 url: redisQueueAdmin.restUrl + 'health',
                 type: 'GET',
@@ -588,16 +707,19 @@
                 },
                 success: function(response) {
                     if (response.success && response.data.redis_connected) {
+                        // Connection successful - show Redis info
                         $result.removeClass('error').addClass('success')
                                .html('<strong>Connection successful!</strong><br>' +
                                     'Redis Version: ' + (response.data.redis_info.redis_version || 'Unknown') + '<br>' +
                                     'Memory Usage: ' + (response.data.redis_info.used_memory || 'Unknown'));
                     } else {
+                        // Connection failed
                         $result.removeClass('success').addClass('error')
                                .html('<strong>Connection failed!</strong><br>Please check your Redis settings.');
                     }
                 },
                 error: function() {
+                    // Unable to reach server
                     $result.removeClass('success').addClass('error')
                            .html('<strong>Connection test failed!</strong><br>Unable to reach the server.');
                 },
@@ -609,6 +731,15 @@
             });
         },
 
+        /**
+         * Create job via admin-ajax fallback.
+         * Used when REST API creation fails.
+         * 
+         * @param {string} jobType Job type (email, image_processing, api_sync)
+         * @param {Object} formData Form data payload
+         * @param {jQuery} $submitButton Submit button element
+         * @param {string} originalText Original button text
+         */
         createJobViaAjax: function(jobType, formData, $submitButton, originalText) {
             console.log('Creating job via admin-ajax fallback');
             
@@ -646,12 +777,19 @@
             });
         },
 
+        /**
+         * Show admin notice.
+         * Displays a WordPress-style notice message that auto-dismisses.
+         * 
+         * @param {string} message Notice message
+         * @param {string} [type='info'] Notice type: info, success, warning, error
+         */
         showNotice: function(message, type) {
             type = type || 'info';
             
             var $notice = $('<div class="notice notice-' + type + ' is-dismissible"><p>' + message + '</p></div>');
             
-            // Insert after h1 if on admin page
+            // Insert notice after h1 or at body start
             if ($('.wrap h1').length) {
                 $('.wrap h1').after($notice);
             } else {
@@ -666,6 +804,13 @@
             }, 5000);
         },
 
+        /**
+         * Show test result message.
+         * Appends a timestamped message to the test results output area.
+         * 
+         * @param {string} message Result message
+         * @param {string} type Message type: success, info, error
+         */
         showTestResult: function(message, type) {
             var $results = $('#test-results');
             var $output = $('#test-output');
@@ -678,7 +823,7 @@
             $output.append(resultHtml);
             $results.show();
             
-            // Scroll to bottom
+            // Auto-scroll to bottom
             $output.scrollTop($output[0].scrollHeight);
         }
     };
