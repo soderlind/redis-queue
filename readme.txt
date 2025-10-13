@@ -115,6 +115,13 @@ The plugin includes fallback mechanisms and graceful error handling. Jobs will f
 * Complete documentation update to reflect new naming
 * See CHANGELOG.md for detailed migration guide
 
+ * Post-release adjustments (still 2.0.0, non-breaking):
+     * Improved test job submission feedback: enforced brief minimum "Processing..." state so users perceive action.
+     * Reworked loading indicator: spinner removed; simple fade animation keeps original button colors.
+     * Fixed admin JS enqueue path (relative `../../` replaced with `plugins_url()` to avoid edge cases in some setups).
+     * Added a <noscript> warning on Test Jobs page for users with JavaScript disabled.
+     * Minor internal JS housekeeping (debug preload marker) to help diagnose asset loading.
+
 = 1.2.0 =
 * Removed legacy global class aliases and all back-compat shims
 * Deleted deprecated `includes/` directory (fully namespaced codebase)

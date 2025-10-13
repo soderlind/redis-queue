@@ -475,6 +475,8 @@
             var $form = $(this);
             var $submitButton = $form.find('button[type="submit"]');
             var originalText = $submitButton.text();
+            var startTime = Date.now();
+            var MIN_PROCESSING_MS = 700; // ensure user perceives processing state
             
             // Prevent double submission
             if ($submitButton.prop('disabled')) {
@@ -482,7 +484,9 @@
                 return;
             }
             
-            $submitButton.prop('disabled', true).text(redisQueueAdmin.strings.processing);
+            $submitButton.prop('disabled', true).addClass('loading').text(redisQueueAdmin.strings.processing);
+            // Immediate user feedback line
+            RedisQueueAdmin.showTestResult('Submitting job request...', 'info');
             
             // Get form data
             var formData = {};
@@ -549,7 +553,15 @@
                 },
                 complete: function() {
                     console.log('Job creation request completed');
-                    $submitButton.prop('disabled', false).text(originalText);
+                    var elapsed = Date.now() - startTime;
+                    var remaining = MIN_PROCESSING_MS - elapsed;
+                    if (remaining > 0) {
+                        setTimeout(function() {
+                            $submitButton.prop('disabled', false).removeClass('loading').text(originalText);
+                        }, remaining);
+                    } else {
+                        $submitButton.prop('disabled', false).removeClass('loading').text(originalText);
+                    }
                 }
             });
         },
@@ -659,7 +671,7 @@
             var $output = $('#test-output');
             
             var timestamp = new Date().toLocaleTimeString();
-            var resultClass = type === 'success' ? 'success' : 'error';
+            var resultClass = (type === 'success') ? 'success' : (type === 'info' ? 'info' : 'error');
             
             var resultHtml = '[' + timestamp + '] ' + message + '\n';
             

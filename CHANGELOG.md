@@ -41,6 +41,24 @@ To migrate from 1.x to 2.0.0:
 - All code examples updated to use new function and filter names
 - REST API namespace remains `redis-queue/v1` for API stability
 
+### Post-release Adjustments (2.0.0)
+These refinements were made after the initial 2.0.0 tag without changing the version number (non‑breaking / UI & internal only):
+
+#### Added
+- Noscript warning block on the Test Jobs admin page to inform users when JavaScript is disabled.
+
+#### Changed
+- Improved test job submission UX: enforce a short minimum "Processing…" state for better visual feedback.
+- Replaced previous loading spinner with a subtle button fade animation (no color inversion, preserves native WP button styling).
+- More resilient admin asset loading by switching from relative `../../assets/...` URLs to `plugins_url()` (avoids edge cases with path traversal or CDN rewriting).
+
+#### Fixed
+- Admin JS not reliably loading in some environments due to relative path (`../../`) usage from within namespaced class directory.
+- Intermittent perception that form submission did "nothing" because the processing state was too brief—now perceptible.
+
+#### Internal
+- Minor housekeeping in admin UI scripts (added lightweight inline preload marker for debugging).
+
 ## [1.2.0] - 2025-10-10
 ### Removed
 - Dropped all legacy global class aliases (previous `class_alias` guards) now that backward compatibility is not required.

@@ -5,6 +5,12 @@
 	<h1><?php esc_html_e( 'Test Jobs', 'redis-queue' ); ?></h1>
 	<p><?php esc_html_e( 'Create test jobs to verify the queue system is working correctly.', 'redis-queue' ); ?>
 	</p>
+	<noscript>
+		<div class="notice notice-error" style="padding:10px;">
+			<p><?php esc_html_e( 'JavaScript is disabled in your browser. Test job submission requires JavaScript.', 'redis-queue' ); ?>
+			</p>
+		</div>
+	</noscript>
 	<?php wp_nonce_field( 'wp_rest', '_wpnonce' ); ?>
 	<div class="redis-queue-test-forms">
 		<div class="test-form-section">
@@ -50,12 +56,12 @@
 			<form id="test-image-job" class="test-job-form">
 				<table class="form-table">
 					<tr>
-						<th><label
-								for="image-operation"><?php esc_html_e( 'Operation:', 'redis-queue' ); ?></label>
+						<th><label for="image-operation"><?php esc_html_e( 'Operation:', 'redis-queue' ); ?></label>
 						</th>
 						<td><select id="image-operation" name="operation">
 								<option value="thumbnail">
-									<?php esc_html_e( 'Generate Thumbnails', 'redis-queue' ); ?></option>
+									<?php esc_html_e( 'Generate Thumbnails', 'redis-queue' ); ?>
+								</option>
 								<option value="optimize"><?php esc_html_e( 'Optimize Image', 'redis-queue' ); ?>
 								</option>
 								<option value="watermark"><?php esc_html_e( 'Add Watermark', 'redis-queue' ); ?>
@@ -63,8 +69,7 @@
 							</select></td>
 					</tr>
 					<tr>
-						<th><label
-								for="attachment-id"><?php esc_html_e( 'Attachment ID:', 'redis-queue' ); ?></label>
+						<th><label for="attachment-id"><?php esc_html_e( 'Attachment ID:', 'redis-queue' ); ?></label>
 						</th>
 						<td><input type="number" id="attachment-id" name="attachment_id" value="1" class="small-text">
 							<p class="description">
@@ -86,7 +91,8 @@
 						</th>
 						<td><select id="api-operation" name="operation">
 								<option value="social_media_post">
-									<?php esc_html_e( 'Social Media Post', 'redis-queue' ); ?></option>
+									<?php esc_html_e( 'Social Media Post', 'redis-queue' ); ?>
+								</option>
 								<option value="crm_sync"><?php esc_html_e( 'CRM Sync', 'redis-queue' ); ?></option>
 								<option value="webhook"><?php esc_html_e( 'Webhook', 'redis-queue' ); ?></option>
 							</select></td>
