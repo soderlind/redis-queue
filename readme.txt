@@ -1,11 +1,11 @@
-=== Redis Queue Demo ===
+=== Redis Queue ===
 Contributors: PerS
-Donate link: https://github.com/soderlind/redis-queue-demo
+Donate link: https://github.com/soderlind/redis-queue
 Tags: redis, queue, background, jobs, performance
 Requires at least: 6.7
 Tested up to: 6.8
 Requires PHP: 8.3
-Stable tag: 1.2.0
+Stable tag: 2.0.0
 License: GPL v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -13,9 +13,9 @@ Redis-backed background job processing for WordPress: priority, delay, retries, 
 
 == Description ==
 
-Redis Queue Demo is a comprehensive WordPress plugin that demonstrates how to implement enterprise-grade background job processing using Redis queues. This plugin showcases effective techniques for handling time-consuming, resource-intensive, or critical tasks asynchronously, improving user experience and site performance.
+Redis Queue is a comprehensive WordPress plugin that demonstrates how to implement enterprise-grade background job processing using Redis queues. This plugin showcases effective techniques for handling time-consuming, resource-intensive, or critical tasks asynchronously, improving user experience and site performance.
 
-**Key Features (1.2.0):**
+**Key Features (2.0.0):**
 
 * **Background Job Processing**: Handle time-consuming tasks without blocking user interactions
 * **REST API Integration**: Complete REST API for worker management, job creation, stats & health
@@ -55,7 +55,7 @@ Redis Queue Demo is a comprehensive WordPress plugin that demonstrates how to im
 
 **Installation Steps:**
 
-1. Upload the plugin files to `/wp-content/plugins/redis-queue-demo/`
+1. Upload the plugin files to `/wp-content/plugins/redis-queue/`
 2. Activate the plugin through the 'Plugins' screen in WordPress
 3. Configure Redis connection in the plugin settings
 4. Visit the Redis Queue Dashboard to start using the plugin
@@ -102,6 +102,19 @@ The plugin includes fallback mechanisms and graceful error handling. Jobs will f
 
 == Changelog ==
 
+= 2.0.0 =
+* **BREAKING CHANGES - Major version update**
+* Plugin renamed from "Redis Queue Demo" to "Redis Queue"
+* Namespace changed from `Soderlind\RedisQueueDemo` to `Soderlind\RedisQueue`
+* Function names changed from `redis_queue_demo_*()` to `redis_queue_*()`
+* Filter/action hooks changed from `redis_queue_demo_*` to `redis_queue_*`
+* Text domain changed from `redis-queue-demo` to `redis-queue`
+* GitHub repository URLs updated to reflect new name
+* Removed all backward compatibility layers and legacy aliases
+* One-time automatic migration of options from old to new prefix
+* Complete documentation update to reflect new naming
+* See CHANGELOG.md for detailed migration guide
+
 = 1.2.0 =
 * Removed legacy global class aliases and all back-compat shims
 * Deleted deprecated `includes/` directory (fully namespaced codebase)
@@ -138,6 +151,9 @@ The plugin includes fallback mechanisms and graceful error handling. Jobs will f
 
 == Upgrade Notice ==
 
+= 2.0.0 =
+MAJOR BREAKING CHANGES: Plugin renamed to "Redis Queue". Namespace, function names, and hooks all changed. Review migration guide in CHANGELOG.md before upgrading. No automatic backward compatibility.
+
 = 1.2.0 =
 Removes deprecated legacy compatibility layers. Only namespaced classes and canonical job types remain.
 
@@ -148,5 +164,5 @@ Adds GitHub-based updates, enriched docs & metadata. No database changes.
 Documentation + security enhancements (token scopes, rate limiting, logging). No database changes.
 
 = 1.0.0 =
-Initial release of the Redis Queue Demo plugin.
+Initial release of the Redis Queue plugin.
 

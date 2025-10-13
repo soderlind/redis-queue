@@ -1,6 +1,6 @@
 # Scaling Workers & Throughput
 
-Guidance for scaling Redis Queue Demo beyond a single synchronous worker.
+Guidance for scaling Redis Queue beyond a single synchronous worker.
 
 ## Objectives
 - Increase parallel job throughput

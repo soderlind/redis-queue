@@ -1,6 +1,6 @@
 # Usage & Operations Guide
 
-This document centralizes day-to-day usage, programmatic patterns, advanced features, troubleshooting, and performance practices for the Redis Queue Demo plugin.
+This document centralizes day-to-day usage, programmatic patterns, advanced features, troubleshooting, and performance practices for the Redis Queue plugin.
 
 ## Table of Contents
 1. Admin Interface
@@ -85,7 +85,7 @@ curl -X POST "https://yoursite.com/wp-json/redis-queue/v1/jobs" \
 
 ### Creating & Enqueuing Jobs
 ```php
-use Soderlind\RedisQueueDemo\Jobs\Email_Job;
+use Soderlind\RedisQueue\Jobs\Email_Job;
 
 $email_job = new Email_Job([
   'email_type' => 'single',
@@ -97,16 +97,16 @@ $email_job = new Email_Job([
 $email_job->set_priority(10);
 $email_job->set_queue_name('emails');
 
-$job_id = redis_queue_demo()->get_queue_manager()->enqueue( $email_job );
+$job_id = redis_queue()->get_queue_manager()->enqueue( $email_job );
 ```
 
 ### Processing Jobs Manually
 ```php
-use Soderlind\RedisQueueDemo\Workers\Sync_Worker;
+use Soderlind\RedisQueue\Workers\Sync_Worker;
 
 $worker = new Sync_Worker(
-  redis_queue_demo()->get_queue_manager(),
-  redis_queue_demo()->get_job_processor()
+  redis_queue()->get_queue_manager(),
+  redis_queue()->get_job_processor()
 );
 $results = $worker->process_jobs( [ 'default', 'emails' ], 5 );
 ```
@@ -213,7 +213,7 @@ ini_set( 'max_execution_time', 300 );
 ### Worker Scheduling
 Cron / supervisor strategies:
 ```
-* * * * * wp eval "redis_queue_demo()->process_jobs();"
+* * * * * wp eval "redis_queue()->process_jobs();"
 ```
 Consider external runners for higher throughput.
 

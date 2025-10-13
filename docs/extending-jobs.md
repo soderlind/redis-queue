@@ -1,10 +1,10 @@
 # Extending Jobs
 
-This guide explains how to create custom background jobs by extending the base abstractions provided by Redis Queue Demo.
+This guide explains how to create custom background jobs by extending the base abstractions provided by Redis Queue.
 
 ## Core Concepts
 
-Important: The plugin now exclusively uses namespaced classes and only canonical job type identifiers you define (e.g. `email`, `image_processing`, `api_sync`, or your custom strings). Legacy/global class name variants (like `Email_Job`, `email_job`) are not auto-mapped.
+Important: The plugin now exclusively uses namespaced classes under `Soderlind\RedisQueue` and only canonical job type identifiers you define (e.g. `email`, `image_processing`, `api_sync`, or your custom strings). Legacy/global class name variants are not supported.
 
 A job represents a unit of work executed asynchronously by a worker. Each job class encapsulates:
 
@@ -78,7 +78,7 @@ $job->set_priority( 10 );            // optional
 $job->set_queue_name( 'reports' );   // optional
 $job->set_delay_until( time() + 600 ); // run in 10 minutes
 
-$job_id = redis_queue_demo()->get_queue_manager()->enqueue( $job );
+$job_id = redis_queue()->get_queue_manager()->enqueue( $job );
 ```
 
 ### Processing
@@ -144,10 +144,10 @@ public static function create_report( $report_id ) {
 
 ### Registering / Filtering Custom Types
 
-If you want dynamic creation based on a string type (e.g., via REST), add a filter where the plugin instantiates jobs. For this plugin, extend `redis_queue_demo_create_job` filter (see `redis-queue-demo.php`):
+If you want dynamic creation based on a string type (e.g., via REST), add a filter where the plugin instantiates jobs. For this plugin, extend `redis_queue_create_job` filter:
 
 ```php
-add_filter( 'redis_queue_demo_create_job', function( $job, $job_type, $payload ) {
+add_filter( 'redis_queue_create_job', function( $job, $job_type, $payload ) {
     if ( $job ) { return $job; }
     if ( 'report_generation' === $job_type ) {
         return new Report_Generation_Job( $payload );
@@ -179,7 +179,7 @@ Internally the job is placed in a delayed sorted set until due.
 
 - Use the admin “Full Debug Test” for baseline health.
 - Inspect the job record in DB table `wp_redis_queue_jobs`.
-- Check Redis keys with the configured prefix (`redis-cli KEYS "*redis_queue_demo*"`).
+- Check Redis keys with the configured prefix (`redis-cli KEYS "*redis_queue*"`).
 - Enable request logging & look at log lines for REST interactions.
 
 ### Best Practices
