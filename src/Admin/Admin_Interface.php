@@ -1,9 +1,9 @@
 <?php
-namespace Soderlind\RedisQueueDemo\Admin;
+namespace Soderlind\RedisQueue\Admin;
 
-use Soderlind\RedisQueueDemo\Core\Redis_Queue_Manager;
-use Soderlind\RedisQueueDemo\Core\Job_Processor;
-use Soderlind\RedisQueueDemo\Workers\Sync_Worker;
+use Soderlind\RedisQueue\Core\Redis_Queue_Manager;
+use Soderlind\RedisQueue\Core\Job_Processor;
+use Soderlind\RedisQueue\Workers\Sync_Worker;
 use Exception;
 use Throwable;
 
@@ -36,33 +36,33 @@ class Admin_Interface {
 	}
 
 	public function add_admin_menu() {
-		\add_menu_page( __( 'Redis Queue', 'redis-queue-demo' ), __( 'Redis Queue', 'redis-queue-demo' ), 'manage_options', 'redis-queue-demo', [ $this, 'render_dashboard_page' ], 'dashicons-database-view', 30 );
-		\add_submenu_page( 'redis-queue-demo', __( 'Dashboard', 'redis-queue-demo' ), __( 'Dashboard', 'redis-queue-demo' ), 'manage_options', 'redis-queue-demo', [ $this, 'render_dashboard_page' ] );
-		\add_submenu_page( 'redis-queue-demo', __( 'Jobs', 'redis-queue-demo' ), __( 'Jobs', 'redis-queue-demo' ), 'manage_options', 'redis-queue-jobs', [ $this, 'render_jobs_page' ] );
-		\add_submenu_page( 'redis-queue-demo', __( 'Test Jobs', 'redis-queue-demo' ), __( 'Test Jobs', 'redis-queue-demo' ), 'manage_options', 'redis-queue-test', [ $this, 'render_test_page' ] );
-		\add_submenu_page( 'redis-queue-demo', __( 'Settings', 'redis-queue-demo' ), __( 'Settings', 'redis-queue-demo' ), 'manage_options', 'redis-queue-settings', [ $this, 'render_settings_page' ] );
+		\add_menu_page( __( 'Redis Queue', 'redis-queue' ), __( 'Redis Queue', 'redis-queue' ), 'manage_options', 'redis-queue', [ $this, 'render_dashboard_page' ], 'dashicons-database-view', 30 );
+		\add_submenu_page( 'redis-queue', __( 'Dashboard', 'redis-queue' ), __( 'Dashboard', 'redis-queue' ), 'manage_options', 'redis-queue', [ $this, 'render_dashboard_page' ] );
+		\add_submenu_page( 'redis-queue', __( 'Jobs', 'redis-queue' ), __( 'Jobs', 'redis-queue' ), 'manage_options', 'redis-queue-jobs', [ $this, 'render_jobs_page' ] );
+		\add_submenu_page( 'redis-queue', __( 'Test Jobs', 'redis-queue' ), __( 'Test Jobs', 'redis-queue' ), 'manage_options', 'redis-queue-test', [ $this, 'render_test_page' ] );
+		\add_submenu_page( 'redis-queue', __( 'Settings', 'redis-queue' ), __( 'Settings', 'redis-queue' ), 'manage_options', 'redis-queue-settings', [ $this, 'render_settings_page' ] );
 	}
 
 	public function enqueue_admin_scripts( $hook_suffix ) {
 		if ( false === strpos( $hook_suffix, 'redis-queue' ) ) {
 			return;
 		}
-		\wp_enqueue_script( 'redis-queue-admin', \plugin_dir_url( __FILE__ ) . '../../assets/admin.js', [ 'jquery' ], REDIS_QUEUE_DEMO_VERSION, true );
+		\wp_enqueue_script( 'redis-queue-admin', \plugin_dir_url( __FILE__ ) . '../../assets/admin.js', [ 'jquery' ], REDIS_QUEUE_VERSION, true );
 		\wp_localize_script( 'redis-queue-admin', 'redisQueueAdmin', [
 			'ajaxUrl'   => \admin_url( 'admin-ajax.php' ),
 			'nonce'     => \wp_create_nonce( 'redis_queue_admin' ),
 			'restNonce' => \wp_create_nonce( 'wp_rest' ),
 			'restUrl'   => \rest_url( 'redis-queue/v1/' ),
 			'strings'   => [
-				'processing'      => __( 'Processing...', 'redis-queue-demo' ),
-				'success'         => __( 'Success!', 'redis-queue-demo' ),
-				'error'           => __( 'Error occurred', 'redis-queue-demo' ),
-				'confirmClear'    => __( 'Are you sure you want to clear this queue?', 'redis-queue-demo' ),
-				'workerTriggered' => __( 'Worker triggered successfully', 'redis-queue-demo' ),
-				'queueCleared'    => __( 'Queue cleared successfully', 'redis-queue-demo' ),
+				'processing'      => __( 'Processing...', 'redis-queue' ),
+				'success'         => __( 'Success!', 'redis-queue' ),
+				'error'           => __( 'Error occurred', 'redis-queue' ),
+				'confirmClear'    => __( 'Are you sure you want to clear this queue?', 'redis-queue' ),
+				'workerTriggered' => __( 'Worker triggered successfully', 'redis-queue' ),
+				'queueCleared'    => __( 'Queue cleared successfully', 'redis-queue' ),
 			],
 		] );
-		\wp_enqueue_style( 'redis-queue-admin', \plugin_dir_url( __FILE__ ) . '../../assets/admin.css', [], REDIS_QUEUE_DEMO_VERSION );
+		\wp_enqueue_style( 'redis-queue-admin', \plugin_dir_url( __FILE__ ) . '../../assets/admin.css', [], REDIS_QUEUE_VERSION );
 	}
 
 	// The following render methods replicate legacy output exactly.
@@ -152,7 +152,7 @@ class Admin_Interface {
 	public function settings_saved_notice() {
 		?>
 		<div class="notice notice-success is-dismissible">
-			<p><?php esc_html_e( 'Settings saved successfully.', 'redis-queue-demo' ); ?></p>
+			<p><?php esc_html_e( 'Settings saved successfully.', 'redis-queue' ); ?></p>
 		</div>
 		<?php
 	}

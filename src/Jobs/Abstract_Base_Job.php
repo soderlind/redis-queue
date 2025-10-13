@@ -1,10 +1,10 @@
 <?php
-namespace Soderlind\RedisQueueDemo\Jobs;
+namespace Soderlind\RedisQueue\Jobs;
 
 use Exception;
-use Soderlind\RedisQueueDemo\Contracts\Queue_Job;
-use Soderlind\RedisQueueDemo\Contracts\Job_Result;
-use Soderlind\RedisQueueDemo\Contracts\Basic_Job_Result;
+use Soderlind\RedisQueue\Contracts\Queue_Job;
+use Soderlind\RedisQueue\Contracts\Job_Result;
+use Soderlind\RedisQueue\Contracts\Basic_Job_Result;
 
 abstract class Abstract_Base_Job implements Queue_Job {
 	protected array $payload = [];

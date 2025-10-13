@@ -176,9 +176,9 @@ class Job_Processor {
 		// Normalized job type mapping (canonical identifiers).
 		$job_type_normalized = strtolower( trim( $job_type ) );
 		$base_map            = [
-			'email'            => 'Soderlind\\RedisQueueDemo\\Jobs\\Email_Job',
-			'image_processing' => 'Soderlind\\RedisQueueDemo\\Jobs\\Image_Processing_Job',
-			'api_sync'         => 'Soderlind\\RedisQueueDemo\\Jobs\\API_Sync_Job',
+			'email'            => 'Soderlind\\RedisQueue\\Jobs\\Email_Job',
+			'image_processing' => 'Soderlind\\RedisQueue\\Jobs\\Image_Processing_Job',
+			'api_sync'         => 'Soderlind\\RedisQueue\\Jobs\\API_Sync_Job',
 		];
 		$job_classes         = function_exists( 'apply_filters' ) ? \apply_filters( 'redis_queue_job_classes', $base_map ) : $base_map;
 		if ( isset( $job_classes[ $job_type_normalized ] ) ) {

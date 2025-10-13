@@ -1,12 +1,12 @@
 <?php
-namespace Soderlind\RedisQueueDemo\API;
+namespace Soderlind\RedisQueue\API;
 
-use Soderlind\RedisQueueDemo\Core\Redis_Queue_Manager;
-use Soderlind\RedisQueueDemo\Core\Job_Processor;
-use Soderlind\RedisQueueDemo\Workers\Sync_Worker;
-use Soderlind\RedisQueueDemo\Jobs\Email_Job;
-use Soderlind\RedisQueueDemo\Jobs\Image_Processing_Job;
-use Soderlind\RedisQueueDemo\Jobs\API_Sync_Job;
+use Soderlind\RedisQueue\Core\Redis_Queue_Manager;
+use Soderlind\RedisQueue\Core\Job_Processor;
+use Soderlind\RedisQueue\Workers\Sync_Worker;
+use Soderlind\RedisQueue\Jobs\Email_Job;
+use Soderlind\RedisQueue\Jobs\Image_Processing_Job;
+use Soderlind\RedisQueue\Jobs\API_Sync_Job;
 use WP_REST_Server;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -172,7 +172,7 @@ class REST_Controller {
 			'memory_usage'      => [ 'current' => memory_get_usage( true ), 'peak' => memory_get_peak_usage( true ), 'limit' => ini_get( 'memory_limit' ) ],
 			'php_version'       => PHP_VERSION,
 			'wordpress_version' => get_bloginfo( 'version' ),
-			'plugin_version'    => \defined( 'REDIS_QUEUE_DEMO_VERSION' ) ? REDIS_QUEUE_DEMO_VERSION : 'unknown',
+			'plugin_version'    => \defined( 'REDIS_QUEUE_VERSION' ) ? REDIS_QUEUE_VERSION : 'unknown',
 		];
 		if ( $health[ 'redis_connected' ] ) {
 			try {

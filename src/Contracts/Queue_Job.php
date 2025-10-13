@@ -1,5 +1,5 @@
 <?php
-namespace Soderlind\RedisQueueDemo\Contracts;
+namespace Soderlind\RedisQueue\Contracts;
 
 interface Queue_Job {
 	public function get_job_type();

@@ -1,5 +1,5 @@
 <?php
-namespace Soderlind\RedisQueueDemo\Contracts;
+namespace Soderlind\RedisQueue\Contracts;
 
 class Basic_Job_Result implements Job_Result {
 	private bool $successful;

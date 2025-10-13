@@ -1,8 +1,8 @@
 <?php
-namespace Soderlind\RedisQueueDemo\Jobs;
+namespace Soderlind\RedisQueue\Jobs;
 
 use Exception;
-use Soderlind\RedisQueueDemo\Contracts\Job_Result;
+use Soderlind\RedisQueue\Contracts\Job_Result;
 
 class Email_Job extends Abstract_Base_Job {
 	public function __construct( $payload = [] ) {

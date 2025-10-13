@@ -1,5 +1,5 @@
 <?php
-namespace Soderlind\RedisQueueDemo\Contracts;
+namespace Soderlind\RedisQueue\Contracts;
 
 interface Job_Result {
 	public function is_successful();
