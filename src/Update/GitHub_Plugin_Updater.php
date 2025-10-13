@@ -1,5 +1,5 @@
 <?php
-namespace Soderlind\RedisQueueDemo\Update;
+namespace Soderlind\RedisQueue\Update;
 
 use \YahnisElsts\PluginUpdateChecker\v5\PucFactory;
 

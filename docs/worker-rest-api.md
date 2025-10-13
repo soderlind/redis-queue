@@ -1,4 +1,4 @@
-# Redis Queue Demo – REST API Documentation
+# Redis Queue – REST API Documentation
 
 Base Namespace: `redis-queue/v1`
 Base URL Example: `https://example.com/wp-json/redis-queue/v1/`
@@ -45,7 +45,7 @@ Notes:
 - Nonce header is only required for cookie-based WP auth, not for token auth.
 - Treat the token like a password. Regenerating on the settings page invalidates the old token.
 - To revoke token access, clear the token on the settings page (save) so only WP auth works.
-- Token Scope: By default the token scope is "worker" which only permits calling `/workers/trigger`. Setting scope to "full" (in Settings) allows all endpoints documented here. Developers can filter `redis_queue_demo_token_allowed_routes` or `redis_queue_demo_token_scope_allow` to fine-tune access.
+- Token Scope: By default the token scope is "worker" which only permits calling `/workers/trigger`. Setting scope to "full" (in Settings) allows all endpoints documented here. Developers can filter `redis_queue_token_allowed_routes` or `redis_queue_token_scope_allow` to fine-tune access.
 - Rate Limiting: Token calls are limited per token per minute (default 60). Exceeding returns HTTP 429 `rate_limited` error.
 - Request Logging: If enabled in settings, each call in this namespace is logged (JSON lines) containing timestamp, route, status, auth method, scope result, rate-limit flag, WP user ID (if any), and IP.
 
@@ -335,7 +335,7 @@ If token scope is worker-only and you call a disallowed endpoint:
 
 ---
 ## Logging & Rotation
-When enabled, logs are written to: `wp-content/uploads/redis-queue-demo-logs/requests.log`
+When enabled, logs are written to: `wp-content/uploads/redis-queue-logs/requests.log`
 Rotation occurs when the file exceeds the configured size (KB). Old logs are named `requests-YYYYmmdd-HHMMSS.log`. The oldest rotated files are pruned beyond the configured maximum count.
 
 Log line sample (JSON):
@@ -356,15 +356,15 @@ Fields:
 
 ---
 ## Filters for Developers
-- `redis_queue_demo_token_allowed_routes( array $routes, string $scope )` to override which routes a non-full scope token may call.
-- `redis_queue_demo_token_scope_allow( bool $allowed, string $scope, WP_REST_Request $request )` for per-request dynamic decisions.
+- `redis_queue_token_allowed_routes( array $routes, string $scope )` to override which routes a non-full scope token may call.
+- `redis_queue_token_scope_allow( bool $allowed, string $scope, WP_REST_Request $request )` for per-request dynamic decisions.
 
 ### Filter Examples
 
 Allow a worker-scope token to call the stats & health endpoints in addition to the default trigger route:
 
 ```php
-add_filter( 'redis_queue_demo_token_allowed_routes', function( $routes, $scope ) {
+add_filter( 'redis_queue_token_allowed_routes', function( $routes, $scope ) {
   if ( 'worker' === $scope ) {
     $routes[] = '/redis-queue/v1/stats';
     $routes[] = '/redis-queue/v1/health';
@@ -376,7 +376,7 @@ add_filter( 'redis_queue_demo_token_allowed_routes', function( $routes, $scope )
 Block a specific sensitive route for all tokens unless scope is full and request comes from an internal IP:
 
 ```php
-add_filter( 'redis_queue_demo_token_scope_allow', function( $allowed, $scope, $request ) {
+add_filter( 'redis_queue_token_scope_allow', function( $allowed, $scope, $request ) {
   $internal_ip = '10.0.0.5';
   $route       = $request->get_route();
 
@@ -394,7 +394,7 @@ add_filter( 'redis_queue_demo_token_scope_allow', function( $allowed, $scope, $r
 Completely disable rate-limited trigger bursts except for a whitelisted queue set (example: only allow worker token to trigger specific queues):
 
 ```php
-add_filter( 'redis_queue_demo_token_scope_allow', function( $allowed, $scope, $request ) {
+add_filter( 'redis_queue_token_scope_allow', function( $allowed, $scope, $request ) {
   if ( ! $allowed ) { return false; }
   if ( 'worker' !== $scope ) { return $allowed; }
   if ( '/redis-queue/v1/workers/trigger' !== $request->get_route() ) { return $allowed; }
@@ -414,7 +414,7 @@ add_filter( 'redis_queue_demo_token_scope_allow', function( $allowed, $scope, $r
 Fine-tune rate limits dynamically (example: lower limits for worker scope vs full scope). Core rate limiting currently uses a single per-minute value; this pattern shows how you might intercept before heavy routes and short-circuit access using the scope filter as a pseudo dynamic limiter:
 
 ```php
-add_filter( 'redis_queue_demo_token_scope_allow', function( $allowed, $scope, $request ) {
+add_filter( 'redis_queue_token_scope_allow', function( $allowed, $scope, $request ) {
   if ( ! $allowed ) { return false; }
 
   // Simple in-memory (transient) adaptive limiter per scope.
@@ -442,16 +442,16 @@ add_filter( 'redis_queue_demo_token_scope_allow', function( $allowed, $scope, $r
 Per-token differentiated limits (example: store a map of token hashes to custom budgets). Since the raw token is available only during permission check, you could extend core to capture it; here we assume you stored custom limits in an option keyed by sha256 hash:
 
 ```php
-add_filter( 'redis_queue_demo_token_scope_allow', function( $allowed, $scope, $request ) {
+add_filter( 'redis_queue_token_scope_allow', function( $allowed, $scope, $request ) {
   if ( ! $allowed ) { return false; }
 
-  // Suppose you saved custom limits: option name 'redis_queue_demo_custom_token_limits'
+  // Suppose you saved custom limits: option name 'redis_queue_custom_token_limits'
   // Format: [ sha256(token) => [ 'limit' => 45 ] ]
   $settings = get_option( 'redis_queue_settings', array() );
   if ( empty( $settings['api_token'] ) ) { return $allowed; }
   $token = $settings['api_token'];
   $hash = hash('sha256', $token );
-  $custom_limits = get_option( 'redis_queue_demo_custom_token_limits', array() );
+  $custom_limits = get_option( 'redis_queue_custom_token_limits', array() );
   $limit = isset( $custom_limits[ $hash ]['limit'] ) ? (int) $custom_limits[ $hash ]['limit'] : 60;
 
   $minute = gmdate('YmdHi');

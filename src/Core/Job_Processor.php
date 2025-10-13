@@ -1,10 +1,10 @@
 <?php
-namespace Soderlind\RedisQueueDemo\Core;
+namespace Soderlind\RedisQueue\Core;
 
 use Exception;
-use Soderlind\RedisQueueDemo\Contracts\Queue_Job;
-use Soderlind\RedisQueueDemo\Contracts\Job_Result;
-use Soderlind\RedisQueueDemo\Contracts\Basic_Job_Result;
+use Soderlind\RedisQueue\Contracts\Queue_Job;
+use Soderlind\RedisQueue\Contracts\Job_Result;
+use Soderlind\RedisQueue\Contracts\Basic_Job_Result;
 
 /**
  * Namespaced Job Processor.
@@ -46,7 +46,7 @@ class Job_Processor {
 				$this->handle_failed_job( $job_id, $job, $result, 1, null );
 			}
 			if ( function_exists( 'do_action' ) ) {
-				\do_action( 'redis_queue_demo_job_processed', $job_id, $job, $result );
+				\do_action( 'redis_queue_job_processed', $job_id, $job, $result );
 			}
 			return $result;
 		} catch (Exception $e) {
@@ -62,7 +62,7 @@ class Job_Processor {
 				$this->mark_job_failed( $job_id, $result );
 			}
 			if ( function_exists( 'do_action' ) ) {
-				\do_action( 'redis_queue_demo_job_failed', $job_id, $e, $job_data );
+				\do_action( 'redis_queue_job_failed', $job_id, $e, $job_data );
 			}
 			return $result;
 		} finally {
@@ -76,7 +76,7 @@ class Job_Processor {
 		$start_time   = microtime( true );
 		$start_memory = memory_get_usage( true );
 		if ( function_exists( 'do_action' ) ) {
-			\do_action( 'redis_queue_demo_batch_start', $queues, $max_jobs );
+			\do_action( 'redis_queue_batch_start', $queues, $max_jobs );
 		}
 		while ( $processed < $max_jobs ) {
 			$job_data = $this->queue_manager->dequeue( $queues );
@@ -93,7 +93,7 @@ class Job_Processor {
 		$total_time   = microtime( true ) - $start_time;
 		$total_memory = memory_get_peak_usage( true ) - $start_memory;
 		if ( function_exists( 'do_action' ) ) {
-			\do_action( 'redis_queue_demo_batch_complete', $results, $processed, $total_time, $total_memory );
+			\do_action( 'redis_queue_batch_complete', $results, $processed, $total_time, $total_memory );
 		}
 		return [ 'processed' => $processed, 'total_time' => $total_time, 'total_memory' => $total_memory, 'results' => $results ];
 	}
@@ -145,9 +145,9 @@ class Job_Processor {
 			if ( is_string( $job_type ) && $job_type !== '' ) {
 				// Canonical job type mapping only (legacy variants removed).
 				$map = [
-					'email'            => 'Soderlind\\RedisQueueDemo\\Jobs\\Email_Job',
-					'image_processing' => 'Soderlind\\RedisQueueDemo\\Jobs\\Image_Processing_Job',
-					'api_sync'         => 'Soderlind\\RedisQueueDemo\\Jobs\\API_Sync_Job',
+					'email'            => 'Soderlind\\RedisQueue\\Jobs\\Email_Job',
+					'image_processing' => 'Soderlind\\RedisQueue\\Jobs\\Image_Processing_Job',
+					'api_sync'         => 'Soderlind\\RedisQueue\\Jobs\\API_Sync_Job',
 				];
 				$key = $map[ strtolower( $job_type ) ] ?? null;
 				if ( $key ) {
@@ -176,11 +176,11 @@ class Job_Processor {
 		// Normalized job type mapping (canonical identifiers).
 		$job_type_normalized = strtolower( trim( $job_type ) );
 		$base_map            = [
-			'email'            => 'Soderlind\\RedisQueueDemo\\Jobs\\Email_Job',
-			'image_processing' => 'Soderlind\\RedisQueueDemo\\Jobs\\Image_Processing_Job',
-			'api_sync'         => 'Soderlind\\RedisQueueDemo\\Jobs\\API_Sync_Job',
+			'email'            => 'Soderlind\\RedisQueue\\Jobs\\Email_Job',
+			'image_processing' => 'Soderlind\\RedisQueue\\Jobs\\Image_Processing_Job',
+			'api_sync'         => 'Soderlind\\RedisQueue\\Jobs\\API_Sync_Job',
 		];
-		$job_classes         = function_exists( 'apply_filters' ) ? \apply_filters( 'redis_queue_demo_job_classes', $base_map ) : $base_map;
+		$job_classes         = function_exists( 'apply_filters' ) ? \apply_filters( 'redis_queue_job_classes', $base_map ) : $base_map;
 		if ( isset( $job_classes[ $job_type_normalized ] ) ) {
 			return $job_classes[ $job_type_normalized ];
 		}
@@ -199,7 +199,7 @@ class Job_Processor {
 		$table = $wpdb->prefix . 'redis_queue_jobs';
 		$wpdb->update( $table, [ 'status' => 'completed', 'result' => ( function_exists( 'wp_json_encode' ) ? \wp_json_encode( $result->to_array() ) : json_encode( $result->to_array() ) ), 'updated_at' => ( function_exists( 'current_time' ) ? \current_time( 'mysql' ) : date( 'Y-m-d H:i:s' ) ) ], [ 'job_id' => $job_id ], [ '%s', '%s', '%s' ], [ '%s' ] );
 		if ( function_exists( 'do_action' ) ) {
-			\do_action( 'redis_queue_demo_job_completed', $job_id, $result );
+			\do_action( 'redis_queue_job_completed', $job_id, $result );
 		}
 	}
 	private function handle_failed_job( $job_id, Queue_Job $job, Job_Result $result, $attempt, $exception = null ): void {
@@ -224,7 +224,7 @@ class Job_Processor {
 		$this->queue_manager->enqueue( $job, $delay );
 		$this->queue_manager->update_job_status( $job_id, 'queued' );
 		if ( function_exists( 'do_action' ) ) {
-			\do_action( 'redis_queue_demo_job_retried', $job_id, $job, $attempt, $delay );
+			\do_action( 'redis_queue_job_retried', $job_id, $job, $attempt, $delay );
 		}
 	}
 	private function mark_job_failed( $job_id, Job_Result $result ): void {
@@ -232,7 +232,7 @@ class Job_Processor {
 		$table = $wpdb->prefix . 'redis_queue_jobs';
 		$wpdb->update( $table, [ 'status' => 'failed', 'result' => ( function_exists( 'wp_json_encode' ) ? \wp_json_encode( $result->to_array() ) : json_encode( $result->to_array() ) ), 'error_message' => $result->get_error_message(), 'failed_at' => ( function_exists( 'current_time' ) ? \current_time( 'mysql' ) : date( 'Y-m-d H:i:s' ) ), 'updated_at' => ( function_exists( 'current_time' ) ? \current_time( 'mysql' ) : date( 'Y-m-d H:i:s' ) ) ], [ 'job_id' => $job_id ], [ '%s', '%s', '%s', '%s', '%s' ], [ '%s' ] );
 		if ( function_exists( 'do_action' ) ) {
-			\do_action( 'redis_queue_demo_job_permanently_failed', $job_id, $result );
+			\do_action( 'redis_queue_job_permanently_failed', $job_id, $result );
 		}
 	}
 	private function should_stop_processing(): bool {

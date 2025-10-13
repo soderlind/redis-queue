@@ -1,4 +1,4 @@
-# WordPress Redis Queue Demo - Design Document
+# WordPress Redis Queue - Design Document
 
 ## Overview
 This WordPress plugin demonstrates the power of Redis queues for handling time-consuming, resource-intensive, or critical tasks asynchronously. By offloading these tasks to background workers, we improve user experience and site performance.

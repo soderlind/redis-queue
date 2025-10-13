@@ -1,4 +1,4 @@
-# Redis Queue Demo for WordPress
+# Redis Queue for WordPress
 
 Robust Redis-backed background job processing for WordPress. Provides prioritized, delayed, and retryable jobs with an admin UI, REST API, token-based auth (scopes + rate limiting), and extensibility for custom job types.
 
@@ -128,14 +128,14 @@ composer require predis/predis
 
 - **Quick Install**
 
-   - Download [`redis-queue-demo.zip`](https://github.com/soderlind/redis-queue-demo/releases/latest/download/redis-queue-demo.zip)
+   - Download [`redis-queue.zip`](https://github.com/soderlind/redis-queue/releases/latest/download/redis-queue.zip)
    - Upload via  Plugins > Add New > Upload Plugin
    - Activate the plugin.
 
 - **Composer Install**
 
    ```bash
-   composer require soderlind/redis-queue-demo
+   composer require soderlind/redis-queue
    ```
 
 - **Updates**
@@ -218,7 +218,7 @@ Data: {"test": "message"}
 5. Run workers manually (admin button) or on a schedule (cron / wp-cli / external runner).
 
 ```bash
-git clone https://github.com/soderlind/redis-queue-demo.git wp-content/plugins/redis-queue-demo
+git clone https://github.com/soderlind/redis-queue.git wp-content/plugins/redis-queue
 ```
 
 Optionally add Predis:
@@ -285,7 +285,7 @@ Full details: see the [REST API documentation](docs/worker-rest-api.md).
 
 ## Extending
 
-Implement a subclass of `Abstract_Base_Job`, override `get_job_type()` + `execute()`, optionally `should_retry()` and `handle_failure()`. Register dynamically with the `redis_queue_demo_create_job` filter. Full guide: [Extending Jobs](docs/extending-jobs.md).
+Implement a subclass of `Abstract_Base_Job`, override `get_job_type()` + `execute()`, optionally `should_retry()` and `handle_failure()`. Register dynamically with the `redis_queue_create_job` filter. Full guide: [Extending Jobs](docs/extending-jobs.md).
 
 ## Scheduling Workers
 
@@ -321,7 +321,16 @@ For detailed usage, advanced features, troubleshooting, and performance tuning v
 
 ## Namespacing & Backward Compatibility (Refactor Notes)
 
-As of the latest refactor, all core classes have been migrated to the `Soderlind\\RedisQueueDemo` namespace and autoloaded via Composer PSR-4. Legacy global class names (`Redis_Queue_Demo`, `Redis_Queue_Manager`, `Job_Processor`, `Sync_Worker`, `REST_Controller`, `Admin_Interface`, job classes, etc.) are still available through `class_alias` so existing integrations that referenced the old globals continue to work without modification.
+As of version 1.3.0, the plugin has been renamed from "Redis Queue Demo" to "Redis Queue". All core classes have been migrated to the `Soderlind\\RedisQueue` namespace and autoloaded via Composer PSR-4.
+
+**Breaking Changes in 1.3.0:**
+- Namespace changed from `Soderlind\RedisQueueDemo` to `Soderlind\RedisQueue`
+- Main class renamed from `Redis_Queue_Demo` to `Redis_Queue`
+- Function names changed (e.g., `redis_queue_demo()` → `redis_queue()`)
+- Constants changed (e.g., `REDIS_QUEUE_DEMO_VERSION` → `REDIS_QUEUE_VERSION`)
+- Action/filter hooks changed (e.g., `redis_queue_demo_init` → `redis_queue_init`)
+- Text domain changed from `redis-queue-demo` to `redis-queue`
+- Database option prefix changed from `redis_queue_demo_` to `redis_queue_`
 
 Removed legacy duplicate files:
 ```
@@ -336,19 +345,24 @@ src/API/REST_Controller.php
 src/Workers/Sync_Worker.php
 ```
 
-Helper functions (`redis_queue_demo()`, `redis_queue_enqueue_job()`, `redis_queue_process_jobs()`) remain unchanged for ergonomics.
+Helper functions (`redis_queue()`, `redis_queue_enqueue_job()`, `redis_queue_process_jobs()`) remain available for ergonomics.
 
 If you previously required or included specific legacy files manually, you should remove those `require` statements—Composer autoload now handles class loading.
 
 ### Migrating Custom Integrations
 
-If you instantiated legacy classes directly, both of the following are now equivalent:
+If you have code that used the old naming, update it as follows:
 ```php
-$manager = new Redis_Queue_Manager(); // legacy global (still works)
-$manager = new \Soderlind\RedisQueueDemo\Core\Redis_Queue_Manager(); // namespaced
+// Old (1.2.0 and earlier)
+$manager = new \Soderlind\RedisQueueDemo\Core\Redis_Queue_Manager();
+redis_queue_demo()->enqueue_job('email', $payload);
+
+// New (1.3.0+)
+$manager = new \Soderlind\RedisQueue\Core\Redis_Queue_Manager();
+redis_queue()->enqueue_job('email', $payload);
 ```
 
-Custom job classes should adopt the namespace pattern and be placed under `src/YourNamespace/` with an appropriate `composer.json` autoload mapping, or hooked via the `redis_queue_demo_create_job` filter returning a namespaced job instance.
+Custom job classes should adopt the namespace pattern and be placed under `src/YourNamespace/` with an appropriate `composer.json` autoload mapping, or hooked via the `redis_queue_create_job` filter returning a namespaced job instance.
 
 ### Why This Change?
 

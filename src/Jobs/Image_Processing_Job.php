@@ -1,5 +1,5 @@
 <?php
-namespace Soderlind\RedisQueueDemo\Jobs;
+namespace Soderlind\RedisQueue\Jobs;
 
 use Exception;
 

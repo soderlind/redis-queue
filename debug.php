@@ -14,12 +14,12 @@ if ( ! class_exists( 'Redis_Queue_Demo' ) ) {
 }
 
 // Wait for WordPress to fully load
-if ( ! function_exists( 'redis_queue_demo' ) ) {
+if ( ! function_exists( 'redis_queue' ) ) {
 	die( 'Redis Queue Demo functions not available' );
 }
 
 // Get plugin instance
-$plugin = redis_queue_demo();
+$plugin = redis_queue();
 
 echo "=== Redis Queue Demo Debug ===\n";
 

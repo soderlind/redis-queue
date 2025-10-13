@@ -1,8 +1,8 @@
 <?php
-namespace Soderlind\RedisQueueDemo\Workers;
+namespace Soderlind\RedisQueue\Workers;
 
-use Soderlind\RedisQueueDemo\Core\Redis_Queue_Manager;
-use Soderlind\RedisQueueDemo\Core\Job_Processor;
+use Soderlind\RedisQueue\Core\Redis_Queue_Manager;
+use Soderlind\RedisQueue\Core\Job_Processor;
 use Exception; // For catch blocks.
 use Throwable; // PHP 7+/8+ throwable base.
 
@@ -54,7 +54,7 @@ class Sync_Worker {
 		if ( null === $max_jobs ) {
 			$max_jobs = $this->config[ 'max_jobs_per_run' ];
 		}
-		function_exists( '\do_action' ) && \do_action( 'redis_queue_demo_worker_start', $this, $queues, $max_jobs );
+		function_exists( '\do_action' ) && \do_action( 'redis_queue_worker_start', $this, $queues, $max_jobs );
 		try {
 			$results                         = $this->job_processor->process_jobs( $queues, $max_jobs );
 			$this->stats[ 'jobs_processed' ] += $results[ 'processed' ];
@@ -65,7 +65,7 @@ class Sync_Worker {
 				}
 			}
 			$this->state = 'idle';
-			function_exists( '\do_action' ) && \do_action( 'redis_queue_demo_worker_complete', $this, $results );
+			function_exists( '\do_action' ) && \do_action( 'redis_queue_worker_complete', $this, $results );
 			return [
 				'success'      => true,
 				'processed'    => $results[ 'processed' ],
@@ -76,7 +76,7 @@ class Sync_Worker {
 			];
 		} catch (Exception $e) {
 			$this->state = 'error';
-			function_exists( '\do_action' ) && \do_action( 'redis_queue_demo_worker_error', $this, $e );
+			function_exists( '\do_action' ) && \do_action( 'redis_queue_worker_error', $this, $e );
 			return [ 'success' => false, 'error' => $e ? $e->getMessage() : 'Unknown error occurred', 'code' => $e ? $e->getCode() : 0 ];
 		} catch (Throwable $e) {
 			$this->state = 'error';
@@ -139,9 +139,9 @@ class Sync_Worker {
 					$job_class = $job_type;
 				} else {
 					$map       = [
-						'email'            => 'Soderlind\\RedisQueueDemo\\Jobs\\Email_Job',
-						'image_processing' => 'Soderlind\\RedisQueueDemo\\Jobs\\Image_Processing_Job',
-						'api_sync'         => 'Soderlind\\RedisQueueDemo\\Jobs\\API_Sync_Job',
+						'email'            => 'Soderlind\\RedisQueue\\Jobs\\Email_Job',
+						'image_processing' => 'Soderlind\\RedisQueue\\Jobs\\Image_Processing_Job',
+						'api_sync'         => 'Soderlind\\RedisQueue\\Jobs\\API_Sync_Job',
 					];
 					$job_class = $map[ $job_type ] ?? null;
 				}
@@ -232,9 +232,9 @@ class Sync_Worker {
 
 	private function parse_config( $config ) {
 		$defaults                       = [
-			'max_jobs_per_run'    => \redis_queue_demo()->get_option( 'max_jobs_per_run', 10 ),
+			'max_jobs_per_run'    => \redis_queue()->get_option( 'max_jobs_per_run', 10 ),
 			'memory_limit'        => ini_get( 'memory_limit' ),
-			'max_execution_time'  => \redis_queue_demo()->get_option( 'worker_timeout', 300 ),
+			'max_execution_time'  => \redis_queue()->get_option( 'worker_timeout', 300 ),
 			'sleep_interval'      => 1,
 			'retry_failed_jobs'   => true,
 			'cleanup_on_shutdown' => true,
@@ -281,7 +281,7 @@ class Sync_Worker {
 
 	public function __destruct() {
 		if ( $this->config[ 'cleanup_on_shutdown' ] ) {
-			function_exists( '\do_action' ) && \do_action( 'redis_queue_demo_worker_shutdown', $this );
+			function_exists( '\do_action' ) && \do_action( 'redis_queue_worker_shutdown', $this );
 		}
 	}
 }
