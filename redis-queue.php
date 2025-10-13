@@ -55,19 +55,37 @@ function redis_queue_migrate_options_v2() {
 add_action( 'plugins_loaded', 'redis_queue_migrate_options_v2', 1 );
 
 // Bootstrap namespaced main class (new namespace & class name).
-Soderlind\RedisQueue\Core\Redis_Queue::get_instance();
+if ( class_exists( 'Soderlind\RedisQueue\Core\Redis_Queue' ) ) {
+	Soderlind\RedisQueue\Core\Redis_Queue::get_instance();
+} else {
+	add_action( 'admin_notices', function() {
+		if ( current_user_can( 'activate_plugins' ) ) {
+			echo '<div class="notice notice-error"><p>';
+			echo '<strong>Redis Queue:</strong> ';
+			echo esc_html__( 'Plugin dependencies are missing. Please run "composer install" in the plugin directory, or download the plugin from the official release.', 'redis-queue' );
+			echo '</p></div>';
+		}
+	} );
+}
 
 function redis_queue() {
-	return Soderlind\RedisQueue\Core\Redis_Queue::get_instance();
+	if ( class_exists( 'Soderlind\RedisQueue\Core\Redis_Queue' ) ) {
+		return Soderlind\RedisQueue\Core\Redis_Queue::get_instance();
+	}
+	return null;
 }
 
 function redis_queue_enqueue_job( $job_type, $payload = array(), $options = array() ) {
-	return redis_queue()->enqueue_job( $job_type, $payload, $options );
+	$instance = redis_queue();
+	if ( ! $instance ) {
+		return false;
+	}
+	return $instance->enqueue_job( $job_type, $payload, $options );
 }
 
 function redis_queue_process_jobs( $queue = 'default', $max_jobs = null ) {
 	$instance = redis_queue();
-	if ( ! $instance->get_queue_manager() || ! $instance->get_job_processor() ) {
+	if ( ! $instance || ! $instance->get_queue_manager() || ! $instance->get_job_processor() ) {
 		return false;
 	}
 	$worker = new \Soderlind\RedisQueue\Workers\Sync_Worker( $instance->get_queue_manager(), $instance->get_job_processor() );
