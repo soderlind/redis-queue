@@ -32,7 +32,7 @@ Extensibility:
 - Simple `Abstract_Base_Job` subclassing
 - Filters for dynamic job instantiation
 
-TL;DR: see [docs/README.md](docs/README.md) for overview, [docs/usage.md](docs/usage.md) for operations, and [docs/extending-jobs.md](docs/extending-jobs.md) for custom jobs.
+**TL;DR**: see [docs/README.md](docs/README.md) for overview, [docs/usage.md](docs/usage.md) for operations, and [docs/extending-jobs.md](docs/extending-jobs.md) for custom jobs.
 
 ## WordPress Tasks That can Benefit from Redis Queues
 
