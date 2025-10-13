@@ -33,38 +33,59 @@ class Redis_Queue_Manager {
 		}
 	}
 
+	/**
+	 * Connect to Redis.
+	 * Attempts connection using native Redis extension first, falls back to Predis.
+	 * 
+	 * @return bool True if connected successfully.
+	 */
 	private function connect(): bool {
 		try {
+			// Get Redis connection settings.
 			$host     = \redis_queue()->get_option( 'redis_host', '127.0.0.1' );
 			$port     = \redis_queue()->get_option( 'redis_port', 6379 );
 			$password = \redis_queue()->get_option( 'redis_password', '' );
 			$database = \redis_queue()->get_option( 'redis_database', 0 );
 
+			// Try native Redis extension first.
 			if ( \extension_loaded( 'redis' ) ) {
 				$this->redis = new \Redis();
 				$connected   = $this->redis->connect( $host, $port, 2.5 );
+				
 				if ( $connected ) {
+					// Authenticate if password provided.
 					if ( ! empty( $password ) ) {
 						$this->redis->auth( $password );
 					}
+					// Select database.
 					$this->redis->select( $database );
 					$this->connected = true;
 				}
 			} elseif ( class_exists( PredisClient::class) ) {
-				$config = [ 'scheme' => 'tcp', 'host' => $host, 'port' => $port, 'database' => $database ];
+				// Fall back to Predis library.
+				$config = [
+					'scheme'   => 'tcp',
+					'host'     => $host,
+					'port'     => $port,
+					'database' => $database
+				];
+				
 				if ( ! empty( $password ) ) {
 					$config[ 'password' ] = $password;
 				}
+				
 				$this->redis = new PredisClient( $config );
 				$this->redis->connect();
 				$this->connected = true;
 			}
 
+			// Fire connection success action.
 			if ( $this->connected ) {
 				if ( function_exists( 'do_action' ) ) {
 					\do_action( 'redis_queue_connected', $this );
 				}
 			}
+			
 			return $this->connected;
 		} catch (Exception $e) {
 			\error_log( 'Redis Queue Demo: Connection failed - ' . $e->getMessage() );
@@ -73,11 +94,19 @@ class Redis_Queue_Manager {
 		}
 	}
 
+	/**
+	 * Check if Redis connection is active.
+	 * Performs a PING command to verify connection.
+	 * 
+	 * @return bool True if connected and responsive.
+	 */
 	public function is_connected(): bool {
 		if ( ! $this->connected || ! $this->redis ) {
 			return false;
 		}
+		
 		try {
+			// Ping Redis to verify connection is alive.
 			$response = $this->redis->ping();
 			return ( $response === true || $response === 'PONG' );
 		} catch (Exception $e) {
@@ -86,15 +115,26 @@ class Redis_Queue_Manager {
 		}
 	}
 
+	/**
+	 * Enqueue a job to Redis.
+	 * Stores job metadata in database and adds job ID to Redis queue.
+	 * 
+	 * @param Queue_Job $job   Job instance to enqueue.
+	 * @param int|null  $delay Optional delay in seconds before job is available.
+	 * @return string|false Job ID on success, false on failure.
+	 */
 	public function enqueue( Queue_Job $job, $delay = null ) {
 		if ( ! $this->is_connected() ) {
 			return false;
 		}
+		
 		try {
+			// Generate unique job ID.
 			$job_id    = $this->generate_job_id();
 			$job_data  = $this->prepare_job_data( $job, $job_id );
 			$queue_key = $this->get_queue_key( $job->get_queue_name() );
 
+			// Store job metadata in database.
 			if ( ! $this->store_job_metadata( $job_id, $job, $job_data ) ) {
 				return false;
 			}
