@@ -134,7 +134,7 @@ public function handle_failure( $exception, $attempt ) {
 
 ### Creating Helper Factory Methods
 
-Pattern (see `Email_Job`):
+Pattern (see [`Email_Job`](src/Jobs/Email_Job.php) for example):
 
 ```php
 public static function create_report( $report_id ) {
