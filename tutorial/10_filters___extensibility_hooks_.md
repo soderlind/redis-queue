@@ -210,7 +210,7 @@ You’ve just learned:
 - The main filter points available, and how to use them for real site requirements.
 
 Ready to build your own jobs and integrations? Dive into  
-➡️ [Extending Jobs](extending-jobs.md)
+➡️ [Extending Jobs](../docs/extending-jobs.md)
 
 ---
 
