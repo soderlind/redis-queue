@@ -14,6 +14,7 @@ This document lists all public WordPress filters exposed by the Redis Queue plug
 ---
 ## UI / Admin
 ### `redis_queue_show_test_jobs_page`
+[Source](../src/Admin/Admin_Interface.php) – appears in admin menu construction and access guard.
 Controls whether the "Test Jobs" submenu appears in the admin and whether the page can be accessed directly.
 
 | Type | Default | Since |
@@ -30,6 +31,7 @@ add_filter( 'redis_queue_show_test_jobs_page', '__return_false' );
 ---
 ## Job Creation & Mapping
 ### `redis_queue_create_job`
+[Source](../src/Core/Redis_Queue.php) – used when dynamically creating a job instance.
 Allows creation of custom job instances for dynamic job types that are not part of the built‑in set (`email`, `image_processing`, `api_sync`).
 
 Signature:
@@ -53,6 +55,7 @@ add_filter( 'redis_queue_create_job', function( $job, $type, $payload ) {
 ```
 
 ### `redis_queue_job_classes`
+[Source](../src/Core/Job_Processor.php) – base map extended before deserialization.
 Extends or overrides the canonical mapping from simple job type identifiers (lowercase) to fully qualified job class names used during deserialization / processing by the `Job_Processor`.
 
 Signature:
@@ -74,6 +77,7 @@ add_filter( 'redis_queue_job_classes', function( $map ) {
 ---
 ## Job Retry & Backoff
 ### `redis_queue_should_retry_job`
+[Source](../src/Jobs/Abstract_Base_Job.php) – consulted during retry decision logic.
 Determines if a failed job should be retried (only consulted if current attempts < max_attempts).
 
 Signature:
@@ -98,6 +102,7 @@ add_filter( 'redis_queue_should_retry_job', function( $retry, $job, $exception, 
 ```
 
 ### `redis_queue_job_retry_delay`
+[Source](../src/Jobs/Abstract_Base_Job.php) – modifies computed retry backoff delay.
 Adjusts delay (seconds) before a retry attempt is re-enqueued.
 
 Signature:
@@ -120,6 +125,7 @@ add_filter( 'redis_queue_job_retry_delay', function( $delay, $job, $attempt ) {
 ---
 ## Job Payload Validation
 ### `redis_queue_validate_job_payload`
+[Source](../src/Jobs/Abstract_Base_Job.php) – final payload validation gate.
 Override or augment validation of a job payload.
 
 Signature:
@@ -147,6 +153,7 @@ add_filter( 'redis_queue_validate_job_payload', function( $valid, $payload, $job
 These filters control what endpoints a token with a restricted scope may access.
 
 ### `redis_queue_token_allowed_routes`
+[Source](../src/API/REST_Controller.php) – applied when evaluating token route access.
 Defines the list of allowable REST routes for a non-`full` scope token before per-request evaluation.
 
 Signature:
@@ -169,6 +176,7 @@ add_filter( 'redis_queue_token_allowed_routes', function( $routes, $scope ) {
 ```
 
 ### `redis_queue_token_scope_allow`
+[Source](../src/API/REST_Controller.php) – final per-request authorization decision.
 Final gate to allow/deny a request for a token (after URL match). Use to implement dynamic rules (time windows, IP allowlists, etc.).
 
 Signature:
