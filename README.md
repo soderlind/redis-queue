@@ -6,6 +6,8 @@ Robust Redis-backed background job processing for WordPress. Provides prioritize
 
 A production-ready queue system for WordPress, following best practices and patterns.
 
+<img src="assets/screenshot-1.png" alt="Redis Queue Admin Dashboard Screenshot" style="max-width:100%;border:1px solid #ccc;padding:10px;" />
+
 ## Feature Highlights
 
 Core:

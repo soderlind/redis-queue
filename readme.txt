@@ -69,6 +69,9 @@ For local development with Homebrew:
 `
 For production environments, configure Redis connection settings in the plugin admin panel.
 
+==  Screenshots ==
+1. **Admin Dashboard** - Overview of queue status, job statistics, and system health
+
 == Frequently Asked Questions ==
 
 = What is Redis and why do I need it? =
