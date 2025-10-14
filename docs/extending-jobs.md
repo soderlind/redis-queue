@@ -17,7 +17,7 @@ A job represents a unit of work executed asynchronously by a worker. Each job cl
 
 ## Base Class: `Abstract_Base_Job`
 
-`Abstract_Base_Job` (located in `jobs/abstract-base-job.php`) implements common functionality:
+`Abstract_Base_Job` (located in [`src/Jobs/Abstract_Base_Job.php`](../src/Jobs/Abstract_Base_Job.php)) implements common functionality:
 
 - Payload storage & retrieval helpers (`get_payload()`, `get_payload_value()`)
 - Setters for priority, queue, timeout, delay
@@ -134,7 +134,7 @@ public function handle_failure( $exception, $attempt ) {
 
 ### Creating Helper Factory Methods
 
-Pattern (see [`Email_Job`](src/Jobs/Email_Job.php) for example):
+Pattern (see [`Email_Job`](../src/Jobs/Email_Job.php) for example):
 
 ```php
 public static function create_report( $report_id ) {
@@ -219,4 +219,4 @@ class External_Api_Job extends Abstract_Base_Job {
 ```
 
 ---
-**Next:** See `docs/usage.md` (to be created) for general usage, and the REST API doc for remote job creation.
+**Next:** See [`docs/usage.md`](usage.md) for general usage, and the REST API doc for remote job creation.

@@ -112,7 +112,7 @@ $results = $worker->process_jobs( [ 'default', 'emails' ], 5 );
 ```
 
 ### Custom Job Skeleton
-See `docs/extending-jobs.md` for full guidance.
+See [`docs/extending-jobs.md`](extending-jobs.md) for full guidance.
 ```php
 class Custom_Job extends Abstract_Base_Job {
     public function get_job_type() { return 'custom_job'; }
@@ -227,7 +227,7 @@ Consider external runners for higher throughput.
 - Sanitize + validate payloads; avoid storing secrets raw
 - Use encryption or references for sensitive data
 
-For full details see `docs/worker-rest-api.md`.
+For full details see [`docs/worker-rest-api.md`](worker-rest-api.md).
 
 ---
-Made with ❤️  See README for overview & links.
+Made with ❤️  See [README](README.md) for overview & links.
